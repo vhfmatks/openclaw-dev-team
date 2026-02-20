@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  openclaw:
+    image: openclaw/openclaw:latest
+    container_name: openclaw-dev-team
+    restart: unless-stopped
+    
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - NODE_ENV=production
+    
+    volumes:
+      - ./workspace:/root/.openclaw/workspace
+      - ./config:/root/.openclaw
+      - ./skills:/root/.openclaw/skills
+      - ./hooks:/root/.openclaw/hooks
+      - ./dev-projects:/root/dev
+    
+    ports:
+      - "18789:18789"
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    cap_drop:
+      - ALL
+    
+    read_only: false
+    
+    tmpfs:
+      - /tmp:size=100M,mode=1777
+
+networks:
+  default:
+    name: openclaw-network
