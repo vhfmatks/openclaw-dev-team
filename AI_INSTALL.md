@@ -42,16 +42,18 @@ Copy skills to OpenClaw skills directory:
 # Create target directory if not exists
 mkdir -p ~/.openclaw/skills
 
-# Copy all skills
-cp -r skills/dev-team-orchestrator ~/.openclaw/skills/
-cp -r skills/dev-team-planner ~/.openclaw/skills/
-cp -r skills/dev-team-executor ~/.openclaw/skills/
-cp -r skills/dev-team-validator ~/.openclaw/skills/
+# Copy all skills (note: folder names differ from skill names)
+cp -r skills/dev-team-start ~/.openclaw/skills/
+cp -r skills/orchestrator ~/.openclaw/skills/dev-team-orchestrator
+cp -r skills/planner ~/.openclaw/skills/dev-team-planner
+cp -r skills/executor ~/.openclaw/skills/dev-team-executor
+cp -r skills/validator ~/.openclaw/skills/dev-team-validator
 ```
 
 Expected result:
 ```
 ~/.openclaw/skills/
+├── dev-team-start/SKILL.md
 ├── dev-team-orchestrator/SKILL.md
 ├── dev-team-planner/SKILL.md
 ├── dev-team-executor/SKILL.md
@@ -96,6 +98,7 @@ Enable skills and hooks via OpenClaw CLI:
 
 ```bash
 # Enable all skills
+openclaw skills enable dev-team-start
 openclaw skills enable dev-team-orchestrator
 openclaw skills enable dev-team-planner
 openclaw skills enable dev-team-executor
@@ -129,6 +132,7 @@ openclaw skills list | grep dev-team
 
 Expected output:
 ```
+dev-team-start
 dev-team-orchestrator
 dev-team-planner
 dev-team-executor
@@ -171,7 +175,8 @@ Expected response:
 
 | Name | Purpose | Location |
 |------|---------|----------|
-| dev-team-orchestrator | Main coordinator | ~/.openclaw/skills/dev-team-orchestrator/ |
+| dev-team-start | Entry point - creates project and starts pipeline | ~/.openclaw/skills/dev-team-start/ |
+| dev-team-orchestrator | Pipeline coordinator | ~/.openclaw/skills/dev-team-orchestrator/ |
 | dev-team-planner | Planning agent | ~/.openclaw/skills/dev-team-planner/ |
 | dev-team-executor | Code generation | ~/.openclaw/skills/dev-team-executor/ |
 | dev-team-validator | Browser testing | ~/.openclaw/skills/dev-team-validator/ |
@@ -180,7 +185,41 @@ Expected response:
 
 | Name | Event | Purpose |
 |------|-------|---------|
-| dev-team-trigger | message:received | Detect dev requests and trigger orchestrator |
+| dev-team-trigger | message:received | Detect dev requests and notify user |
+
+## Usage
+
+### Primary Method: Slash Command
+
+```
+/dev-team-start <feature description>
+```
+
+Examples:
+```
+/dev-team-start dashboard 기능 개발
+/dev-team-start 사용자 인증 시스템 구현
+/dev-team-start build me a REST API for tasks
+```
+
+### What /dev-team-start Does
+
+1. Creates project folder: `~/dev/dev-team-<project>/`
+2. Sets up workspace: `.dev-team/` with state, plans, reports
+3. Initializes project state files
+4. Starts the dev team pipeline:
+   - Phase 1: Analysis (Planner)
+   - Phase 2: Implementation (Executor)
+   - Phase 3: Validation (Validator)
+   - Phase 4: Delivery
+
+### Hook Method: Keyword Detection
+
+The hook detects dev request keywords in messages:
+- Korean: 만들어줘, 구현해줘, 개발해줘, 추가해줘
+- English: build me, create, implement, develop
+
+When detected, it sends a notification message.
 
 ## Workflow
 
@@ -357,7 +396,7 @@ git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-te
 cp -r /tmp/openclaw-dev-team/skills/* ~/.openclaw/skills/ && \
 cp -r /tmp/openclaw-dev-team/hooks/* ~/.openclaw/hooks/ && \
 mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory} && \
-openclaw skills enable dev-team-orchestrator dev-team-planner dev-team-executor dev-team-validator && \
+openclaw skills enable dev-team-start dev-team-orchestrator dev-team-planner dev-team-executor dev-team-validator && \
 openclaw hooks enable dev-team-trigger && \
 openclaw restart
 
@@ -365,6 +404,9 @@ openclaw restart
 openclaw skills list | grep dev-team
 openclaw hooks list | grep dev-team
 ls ~/.openclaw/hooks/dev-team-trigger/handler.js
+
+# Test
+# In Telegram: /dev-team-start dashboard 기능 개발
 
 # Reinstall (clean)
 rm -rf ~/.openclaw/skills/dev-team-* ~/.openclaw/hooks/dev-team-* && \

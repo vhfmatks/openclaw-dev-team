@@ -18,6 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Skills to install
 SKILLS=(
+    "dev-team-start"
     "dev-team-orchestrator"
     "dev-team-planner"
     "dev-team-executor"
@@ -51,7 +52,20 @@ install_skills() {
     echo -e "${YELLOW}Installing Skills...${NC}"
     
     for skill in "${SKILLS[@]}"; do
-        local src="$SCRIPT_DIR/skills/${skill#dev-team-}"
+        local src=""
+        
+        if [ "$skill" = "dev-team-start" ]; then
+            src="$SCRIPT_DIR/skills/dev-team-start"
+        elif [ "$skill" = "dev-team-orchestrator" ]; then
+            src="$SCRIPT_DIR/skills/orchestrator"
+        elif [ "$skill" = "dev-team-planner" ]; then
+            src="$SCRIPT_DIR/skills/planner"
+        elif [ "$skill" = "dev-team-executor" ]; then
+            src="$SCRIPT_DIR/skills/executor"
+        elif [ "$skill" = "dev-team-validator" ]; then
+            src="$SCRIPT_DIR/skills/validator"
+        fi
+        
         local dest="$SKILLS_DIR/$skill"
         
         if [ -d "$src" ]; then
