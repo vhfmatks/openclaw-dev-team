@@ -7,31 +7,32 @@ services:
     restart: unless-stopped
     
     environment:
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - NODE_ENV=production
+      - ZAI_API_KEY=${ZAI_API_KEY}
     
     volumes:
-      - ./workspace:/root/.openclaw/workspace
-      - ./config:/root/.openclaw
-      - ./skills:/root/.openclaw/skills
-      - ./hooks:/root/.openclaw/hooks
-      - ./dev-projects:/root/dev
+      - ./workspace:/home/node/.openclaw/workspace
+      - ./config:/home/node/.openclaw
+      - ./skills:/home/node/.openclaw/skills
+      - ./hooks:/home/node/.openclaw/hooks
+      - ./dev-projects:/home/node/dev
     
     ports:
       - "18789:18789"
+      - "18790:18790"
     
     security_opt:
       - no-new-privileges:true
     
-    cap_drop:
-      - ALL
-    
-    read_only: false
-    
-    tmpfs:
-      - /tmp:size=100M,mode=1777
+    init: true
+    command:
+      - node
+      - dist/index.js
+      - gateway
+      - --bind
+      - lan
+      - --port
+      - "18789"
 
 networks:
   default:
-    name: openclaw-network
+    name: openclaw-dev-team
