@@ -1,0 +1,188 @@
+# OpenClaw Dev Team - LLM Context
+
+> This file provides structured context for LLMs about this project.
+
+## Project
+
+```
+name: openclaw-dev-team
+version: 0.1.0
+description: AI-powered development team for OpenClaw - multi-agent orchestration system
+license: MIT
+repository: https://github.com/vhfmatks/openclaw-dev-team
+```
+
+## Purpose
+
+OpenClaw Dev Team enables automated software development through Telegram:
+
+1. User sends a development request via Telegram
+2. AI agents analyze, plan, implement, and test
+3. User receives completed code with verification
+
+## Architecture
+
+```
+Telegram Message
+      │
+      ▼
+┌─────────────────┐
+│ Hook:           │
+│ dev-team-trigger│
+│ (message:received)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Skill:          │
+│ orchestrator    │
+│ (coordinator)   │
+└────────┬────────┘
+         │
+    ┌────┴────┬─────────┐
+    ▼         ▼         ▼
+┌───────┐ ┌───────┐ ┌───────┐
+│planner│ │executor│ │validator│
+│       │ │       │ │        │
+│analyze│ │code   │ │browser │
+│plan   │ │write  │ │test    │
+└───────┘ └───────┘ └────────┘
+```
+
+## Components
+
+### Skills
+
+| Name | Function |
+|------|----------|
+| dev-team-orchestrator | Coordinates all agents, manages pipeline |
+| dev-team-planner | Analyzes requests, creates implementation plan |
+| dev-team-executor | Writes code based on plan |
+| dev-team-validator | Tests code in browser, captures screenshots |
+
+### Hooks
+
+| Name | Event | Action |
+|------|-------|--------|
+| dev-team-trigger | message:received | Detect dev keywords, trigger orchestrator |
+
+## Pipeline Phases
+
+1. **Planning** (10%): Analyze request, decompose tasks
+2. **Execution** (60%): Generate code, create files
+3. **Validation** (20%): Browser test, verify functionality
+4. **Delivery** (10%): Send results to user
+
+## Trigger Keywords
+
+```
+Korean:  만들어줘, 구현해줘, 개발해줘, 추가해줘, 수정해줘, 고쳐줘
+English: build me, create, implement, develop, make a, add a, fix the
+```
+
+## State Management
+
+Location: `~/.openclaw/workspace/dev-team/`
+
+```
+state/
+├── current-task.json    # Active task
+├── agent-status.json    # Agent states
+└── pipeline-phase.txt   # Current phase
+
+plans/      # Generated plans
+reports/    # Validation reports
+screenshots/# Test screenshots
+memory/     # Learned patterns
+```
+
+## Installation
+
+```bash
+# Quick install
+git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/ocdt
+cp -r /tmp/ocdt/skills/* ~/.openclaw/skills/
+cp -r /tmp/ocdt/hooks/* ~/.openclaw/hooks/
+mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory}
+openclaw skills enable dev-team-orchestrator dev-team-planner dev-team-executor dev-team-validator
+openclaw hooks enable dev-team-trigger
+openclaw restart
+```
+
+## Files Structure
+
+```
+openclaw-dev-team/
+├── skills/
+│   ├── orchestrator/SKILL.md
+│   ├── planner/SKILL.md
+│   ├── executor/SKILL.md
+│   └── validator/SKILL.md
+├── hooks/
+│   └── dev-team-trigger/HOOK.md
+├── docs/research-result/
+│   ├── 01-openclaw-overview.md
+│   ├── 02-dev-team-composition-ideas.md
+│   ├── 03-oh-my-opencode-analysis.md
+│   ├── 04-aaa-coding-efforts.md
+│   ├── 05-openclaw-dev-team-proposal.md
+│   ├── 06-self-validation-loop-architecture.md
+│   ├── 07-cycle-control-mechanism.md
+│   └── 08-implementation-plan.md
+├── AI_INSTALL.md
+├── INSTALL.md
+├── INTEGRATION_GUIDE.md
+├── install.sh
+├── quick-install.sh
+├── package.json
+└── README.md
+```
+
+## Related Technologies
+
+- OpenClaw: https://docs.openclaw.ai/
+- OpenClaw Skills: https://docs.openclaw.ai/tools/skills
+- OpenClaw Hooks: https://docs.openclaw.ai/automation/hooks
+- Playwright: https://playwright.dev/ (for browser testing)
+
+## Key Concepts
+
+### Skill (OpenClaw)
+Modular package that adds capabilities. Defined by SKILL.md with YAML frontmatter.
+
+### Hook (OpenClaw)
+Event handler that runs on specific events (message:received, command:new, etc.).
+
+### Pipeline
+Sequential execution of phases: Planning → Execution → Validation → Delivery
+
+## Usage Example
+
+```
+User (Telegram): "로그인 페이지 만들어줘"
+
+Bot: 🔄 개발 요청을 감지했습니다. 작업을 시작합니다...
+     📋 Phase 1/4: Planning...
+     ✅ Phase 1 완료
+     🏗️ Phase 2/4: Execution...
+     ✅ Phase 2 완료 (3 files created)
+     🧪 Phase 3/4: Validation...
+     ✅ Phase 3 완료
+     📦 Phase 4/4: Delivery...
+     ✅ 전체 완료!
+     📁 src/components/Login.tsx
+     📸 [Screenshot attached]
+```
+
+## Limitations (Current MVP)
+
+- Single cycle (no auto-retry on failure)
+- No parallel execution
+- Basic browser testing only
+
+## Future Enhancements
+
+- Self-validation loop (auto-retry on test failure)
+- Parallel agent execution
+- Progress streaming to Telegram
+- Multiple project support
