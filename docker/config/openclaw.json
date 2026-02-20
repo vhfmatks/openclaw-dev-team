@@ -1,0 +1,13 @@
+{
+  "env": {
+    "ZAI_API_KEY": "a23f907cfd8642908c0d9e02f3fd8b61.aN11pUHLKhFX44FN"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "zai/glm-4.7",
+        "fallbacks": ["zai/glm-4-flash"]
+      }
+    }
+  }
+}

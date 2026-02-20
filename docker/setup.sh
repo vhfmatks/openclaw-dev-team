@@ -65,8 +65,17 @@ cat > config/openclaw.json << EOF
 EOF
 
 echo ""
-echo "🐳 Pulling OpenClaw Docker image..."
-docker pull openclaw/openclaw:latest
+echo "📦 Step: Clone OpenClaw (required for Docker build)..."
+if [ ! -d "openclaw" ]; then
+    git clone --depth 1 https://github.com/openclaw/openclaw.git openclaw
+    echo "✅ OpenClaw cloned"
+else
+    echo "✅ OpenClaw already exists (run 'rm -rf openclaw' to refresh)"
+fi
+
+echo ""
+echo "🔨 Building OpenClaw Docker image (this takes a few minutes)..."
+docker build -t openclaw:local -f openclaw/Dockerfile openclaw/
 
 echo ""
 echo "🚀 Starting OpenClaw container..."
@@ -102,30 +111,8 @@ echo ""
 echo "🔧 Commands:"
 echo "   - Logs:  docker-compose logs -f"
 echo "   - Stop:  docker-compose down"
-echo "   - CLI:   docker exec -it openclaw-dev-team node dist/index.js"
+echo "   - CLI:   docker exec -it openclaw-dev-team-gateway node dist/index.js"
 echo ""
 echo "📋 Verify:"
-echo "   docker exec openclaw-dev-team node dist/index.js models status"
-echo ""
-echo ""
-echo "📍 Endpoints:"
-echo "   - Gateway API: http://localhost:18789"
-echo ""
-echo "📂 Volumes:"
-echo "   - Workspace: ./workspace"
-echo "   - Config:    ./config"
-echo "   - Skills:    ./skills"
-echo "   - Hooks:     ./hooks"
-echo "   - Projects:  ./dev-projects"
-echo ""
-echo "🔧 Commands:"
-echo "   - View logs:   docker-compose logs -f"
-echo "   - Stop:        docker-compose down"
-echo "   - Restart:     docker-compose restart"
-echo "   - Shell:       docker exec -it openclaw-dev-team /bin/bash"
-echo ""
-echo "📋 Enable Dev Team Skills:"
-echo "   docker exec -it openclaw-dev-team openclaw skills enable dev-team-start"
-echo "   docker exec -it openclaw-dev-team openclaw skills enable dev-team-orchestrator"
-echo "   docker exec -it openclaw-dev-team openclaw hooks enable dev-team-trigger"
+echo "   docker exec openclaw-dev-team-gateway node dist/index.js models status"
 echo ""

@@ -2,8 +2,11 @@ version: '3.8'
 
 services:
   openclaw:
-    image: openclaw/openclaw:latest
-    container_name: openclaw-dev-team
+    build:
+      context: ./openclaw
+      dockerfile: Dockerfile
+    image: openclaw:local
+    container_name: openclaw-dev-team-gateway
     restart: unless-stopped
     
     environment:
