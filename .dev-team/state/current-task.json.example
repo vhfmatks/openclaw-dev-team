@@ -1,0 +1,21 @@
+{
+  "id": null,
+  "request": null,
+  "status": "idle",
+  "phase": null,
+  "startedAt": null,
+  "completedAt": null,
+  "plan": {
+    "file": null,
+    "status": "pending"
+  },
+  "execution": {
+    "filesChanged": [],
+    "status": "pending"
+  },
+  "validation": {
+    "passed": null,
+    "report": null,
+    "screenshots": []
+  }
+}

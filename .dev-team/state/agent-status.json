@@ -1,0 +1,19 @@
+{
+  "orchestrator": {
+    "status": "idle",
+    "lastRun": null
+  },
+  "planner": {
+    "status": "idle",
+    "lastRun": null
+  },
+  "executor": {
+    "status": "idle",
+    "lastRun": null,
+    "mode": null
+  },
+  "validator": {
+    "status": "idle",
+    "lastRun": null
+  }
+}

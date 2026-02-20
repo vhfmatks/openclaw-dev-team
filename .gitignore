@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.dev-team/plans/
+.dev-team/reports/
+.dev-team/screenshots/
+.dev-team/state/current-task.json
+!.dev-team/state/current-task.json.example

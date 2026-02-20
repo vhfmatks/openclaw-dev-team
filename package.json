@@ -1,0 +1,40 @@
+{
+  "name": "openclaw-dev-team",
+  "version": "0.1.0",
+  "description": "AI-powered development team for OpenClaw",
+  "type": "module",
+  "scripts": {
+    "install:skills": "cp -r skills/* ~/.openclaw/skills/",
+    "install:hooks": "cp -r hooks/* ~/.openclaw/hooks/",
+    "install:all": "npm run install:skills && npm run install:hooks",
+    "test": "echo 'No tests yet'",
+    "lint": "echo 'No lint yet'"
+  },
+  "keywords": [
+    "openclaw",
+    "ai",
+    "dev-team",
+    "automation",
+    "multi-agent"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "openclaw": {
+    "skills": [
+      "./skills/orchestrator",
+      "./skills/planner",
+      "./skills/executor",
+      "./skills/validator"
+    ],
+    "hooks": [
+      "./hooks/dev-team-trigger"
+    ]
+  }
+}
