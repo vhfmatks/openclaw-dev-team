@@ -66,14 +66,20 @@ Copy hooks to OpenClaw hooks directory:
 # Create target directory if not exists
 mkdir -p ~/.openclaw/hooks
 
-# Copy hook
+# Copy hook (must include handler.js)
 cp -r hooks/dev-team-trigger ~/.openclaw/hooks/
+
+# Verify handler.js exists (required for execution)
+ls ~/.openclaw/hooks/dev-team-trigger/handler.js
 ```
 
 Expected result:
 ```
 ~/.openclaw/hooks/
-└── dev-team-trigger/HOOK.md
+└── dev-team-trigger/
+    ├── HOOK.md      (metadata)
+    ├── handler.js   (executable - REQUIRED)
+    └── handler.ts   (source - optional)
 ```
 
 ### Step 4: Create Workspace
@@ -251,6 +257,79 @@ tail -f ~/.openclaw/gateway.log
 tail -f ~/.openclaw/gateway.log | grep -i "dev-team"
 ```
 
+## Reinstallation
+
+If components are not working correctly, perform a clean reinstall:
+
+```bash
+# Step 1: Remove existing installation
+rm -rf ~/.openclaw/skills/dev-team-orchestrator
+rm -rf ~/.openclaw/skills/dev-team-planner
+rm -rf ~/.openclaw/skills/dev-team-executor
+rm -rf ~/.openclaw/skills/dev-team-validator
+rm -rf ~/.openclaw/hooks/dev-team-trigger
+
+# Step 2: Download fresh copy
+rm -rf /tmp/openclaw-dev-team
+git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team
+cd /tmp/openclaw-dev-team
+
+# Step 3: Install skills
+cp -r skills/dev-team-orchestrator ~/.openclaw/skills/
+cp -r skills/dev-team-planner ~/.openclaw/skills/
+cp -r skills/dev-team-executor ~/.openclaw/skills/
+cp -r skills/dev-team-validator ~/.openclaw/skills/
+
+# Step 4: Install hooks (must include handler.js)
+cp -r hooks/dev-team-trigger ~/.openclaw/hooks/
+
+# Step 5: Verify handler.js exists
+ls -la ~/.openclaw/hooks/dev-team-trigger/
+# Must show: HOOK.md, handler.js
+
+# Step 6: Create workspace
+mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory}
+
+# Step 7: Enable components
+openclaw skills enable dev-team-orchestrator
+openclaw skills enable dev-team-planner
+openclaw skills enable dev-team-executor
+openclaw skills enable dev-team-validator
+openclaw hooks enable dev-team-trigger
+
+# Step 8: Restart OpenClaw
+openclaw restart
+```
+
+### Common Reinstallation Issues
+
+**Issue: "Hook has HOOK.md but no handler file"**
+
+This means `handler.js` is missing. OpenClaw requires JavaScript files, not TypeScript.
+
+```bash
+# Verify handler.js exists
+ls ~/.openclaw/hooks/dev-team-trigger/handler.js
+
+# If missing, copy again from repository
+cp /tmp/openclaw-dev-team/hooks/dev-team-trigger/handler.js ~/.openclaw/hooks/dev-team-trigger/
+```
+
+**Issue: Hook not in `openclaw hooks list`**
+
+```bash
+# Check hook directory structure
+ls -la ~/.openclaw/hooks/dev-team-trigger/
+
+# Required files:
+# - HOOK.md (with YAML frontmatter)
+# - handler.js (executable JavaScript)
+
+# Re-enable
+openclaw hooks enable dev-team-trigger
+openclaw restart
+```
+
 ## Uninstallation
 
 ```bash
@@ -273,35 +352,49 @@ openclaw restart
 ## Quick Commands Reference
 
 ```bash
-# Install
-git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team
-cp -r /tmp/openclaw-dev-team/skills/* ~/.openclaw/skills/
-cp -r /tmp/openclaw-dev-team/hooks/* ~/.openclaw/hooks/
-mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory}
-openclaw skills enable dev-team-orchestrator dev-team-planner dev-team-executor dev-team-validator
-openclaw hooks enable dev-team-trigger
+# Full Install (one-liner)
+git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team && \
+cp -r /tmp/openclaw-dev-team/skills/* ~/.openclaw/skills/ && \
+cp -r /tmp/openclaw-dev-team/hooks/* ~/.openclaw/hooks/ && \
+mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory} && \
+openclaw skills enable dev-team-orchestrator dev-team-planner dev-team-executor dev-team-validator && \
+openclaw hooks enable dev-team-trigger && \
 openclaw restart
 
 # Verify
 openclaw skills list | grep dev-team
 openclaw hooks list | grep dev-team
+ls ~/.openclaw/hooks/dev-team-trigger/handler.js
+
+# Reinstall (clean)
+rm -rf ~/.openclaw/skills/dev-team-* ~/.openclaw/hooks/dev-team-* && \
+git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team && \
+cp -r /tmp/openclaw-dev-team/skills/* ~/.openclaw/skills/ && \
+cp -r /tmp/openclaw-dev-team/hooks/* ~/.openclaw/hooks/ && \
+openclaw restart
 
 # Uninstall
 rm -rf ~/.openclaw/skills/dev-team-* ~/.openclaw/hooks/dev-team-*
 openclaw restart
 ```
 
-## File Checksums (for verification)
+## File Verification
 
-After installation, verify critical files exist:
+After installation, verify ALL critical files exist:
 
+```bash
+# Skills (4 files)
+ls ~/.openclaw/skills/dev-team-orchestrator/SKILL.md
+ls ~/.openclaw/skills/dev-team-planner/SKILL.md
+ls ~/.openclaw/skills/dev-team-executor/SKILL.md
+ls ~/.openclaw/skills/dev-team-validator/SKILL.md
+
+# Hooks (2 files required)
+ls ~/.openclaw/hooks/dev-team-trigger/HOOK.md
+ls ~/.openclaw/hooks/dev-team-trigger/handler.js   # MUST EXIST
 ```
-~/.openclaw/skills/dev-team-orchestrator/SKILL.md
-~/.openclaw/skills/dev-team-planner/SKILL.md
-~/.openclaw/skills/dev-team-executor/SKILL.md
-~/.openclaw/skills/dev-team-validator/SKILL.md
-~/.openclaw/hooks/dev-team-trigger/HOOK.md
-```
+
+If `handler.js` is missing, the hook will NOT work. Reinstall from repository.
 
 ## Contact
 
