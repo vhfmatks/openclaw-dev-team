@@ -77,7 +77,15 @@ install_hooks() {
             echo "  → Installing $hook..."
             mkdir -p "$dest"
             cp -r "$src"/* "$dest/"
-            echo -e "    ${GREEN}✓ $hook installed${NC}"
+            
+            if [ -f "$dest/handler.js" ]; then
+                chmod +x "$dest/handler.js"
+                echo -e "    ${GREEN}✓ $hook installed (handler.js)${NC}"
+            elif [ -f "$dest/handler.ts" ]; then
+                echo -e "    ${YELLOW}! $hook has handler.ts but no handler.js${NC}"
+            else
+                echo -e "    ${RED}✗ $hook missing handler file${NC}"
+            fi
         else
             echo -e "    ${RED}✗ Source not found: $src${NC}"
         fi

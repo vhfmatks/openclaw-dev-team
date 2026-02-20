@@ -1,0 +1,14 @@
+{
+  "name": "dev-team-trigger",
+  "version": "0.1.0",
+  "description": "Hook that triggers dev-team-orchestrator on dev requests",
+  "type": "module",
+  "main": "handler.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

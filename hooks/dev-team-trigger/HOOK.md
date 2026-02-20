@@ -9,6 +9,7 @@ metadata:
     events:
       - message:received
       - command:new
+    export: default
 ---
 
 # Dev Team Trigger Hook
