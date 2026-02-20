@@ -1,10 +1,10 @@
 #!/bin/bash
 # Quick installer - downloads and installs from GitHub
-# Usage: curl -sSL https://raw.githubusercontent.com/USER/openclaw-dev-team/main/quick-install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/quick-install.sh | bash
 
 set -e
 
-REPO_URL="https://github.com/YOUR_USERNAME/openclaw-dev-team"
+REPO_URL="https://github.com/vhfmatks/openclaw-dev-team"
 INSTALL_DIR="/tmp/openclaw-dev-team-$$"
 
 echo "🚀 Installing OpenClaw Dev Team..."

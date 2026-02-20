@@ -6,7 +6,7 @@
 
 ```bash
 # 1. 저장소 클론
-git clone https://github.com/YOUR_USERNAME/openclaw-dev-team.git
+git clone https://github.com/vhfmatks/openclaw-dev-team.git
 cd openclaw-dev-team
 
 # 2. 설치 스크립트 실행
@@ -21,7 +21,7 @@ openclaw restart
 
 ```bash
 # GitHub에서 직접 설치
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/openclaw-dev-team/main/quick-install.sh | bash
+curl -sSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/quick-install.sh | bash
 ```
 
 ### 방법 3: 수동 설치
