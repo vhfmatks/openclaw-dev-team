@@ -1,13 +1,45 @@
 ---
-name: dev-team-validator
+name: dev-team:validation-validator
 description: |
-  구현된 기능을 브라우저로 테스트하고 검증하는 에이전트.
-  Playwright를 사용하여 자동화된 테스트를 수행한다.
+  [DEPRECATED] 이 스킬은 Review Squad의 QA Tester로 통합되었습니다.
+  새로운 프로젝트에서는 `dev-team:review-qa-tester`를 사용하세요.
   
-  트리거: Orchestrator가 호출
+  이 문서는 참조용으로 유지됩니다.
+  
+  트리거: 사용되지 않음 (Orchestrator가 Review Squad 호출)
 ---
 
-# Dev Team Validator
+# Dev Team Validator (DEPRECATED)
+
+## 상태: DEPRECATED
+
+> ⚠️ **이 스킬은 더 이상 사용되지 않습니다.**
+>
+> 새로운 Review Squad 구조에서는 `dev-team:review-qa-tester`가 이 역할을 수행합니다.
+>
+> 마이그레이션: `dev-team:validation-validator` → `dev-team:review-qa-tester`
+
+## 변경 사항
+
+| 기존 (Validator) | 새로운 (Review Squad) |
+|------------------|----------------------|
+| 단일 에이전트 | Review Squad 팀 구조 |
+| Playwright만 | OpenClaw Browser + CLI |
+| 자동화된 테스트 | Human-like 테스트 |
+| 독립 실행 | Reviewer + QA + Final Approver |
+
+## 참고
+
+- [QA Tester Skill](../qa-tester/SKILL.md) - 새로운 Human-like QA 테스터
+- [Review Squad Leader](../review-squad/SKILL.md) - Review Squad 리더
+- [Reviewer Skill](../reviewer/SKILL.md) - 요구사항 검수자
+- [Final Approver Skill](../final-approver/SKILL.md) - 최종 승인자
+
+---
+
+*아래는 참조용 원본 문서입니다.*
+
+---
 
 ## 개요
 
@@ -381,6 +413,42 @@ browser.on('disconnected', () => {
 - [ ] 콘솔 에러 0개
 - [ ] 스크린샷 캡처 완료
 - [ ] 보고서 생성됨
+
+## Pipeline Logging (필수)
+
+Validator는 모든 **테스트 결과**를 pipeline-log.jsonl에 기록해야 합니다.
+
+### 시작 시
+
+```bash
+echo '{"ts":"'$(date -Iseconds)'","event":"phase:enter","phase":"validation","agent":"dev-team:validation-validator"}' >> .dev-team/pipeline-log.jsonl
+```
+
+### 테스트 시나리오 결과
+
+```bash
+log_test() {
+  echo '{"ts":"'$(date -Iseconds)'","event":"test:'$1'","scenario":"'$2'","duration":'$3'}' >> .dev-team/pipeline-log.jsonl
+}
+
+# 테스트 통과
+log_test "passed" "page-load" 3200
+
+# 테스트 실패
+log_test "failed" "form-submission" 5000
+```
+
+### 스크린샷 캡처
+
+```bash
+echo '{"ts":"'$(date -Iseconds)'","event":"screenshot","path":"screenshots/page-load-01.png"}' >> .dev-team/pipeline-log.jsonl
+```
+
+### 완료 시
+
+```bash
+echo '{"ts":"'$(date -Iseconds)'","event":"phase:complete","phase":"validation","status":"passed","passed":4,"failed":1,"report":"reports/validation-report.md"}' >> .dev-team/pipeline-log.jsonl
+```
 
 ## 참고
 

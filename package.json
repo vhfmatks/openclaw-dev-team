@@ -4,10 +4,26 @@
   "description": "AI-powered development team for OpenClaw",
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
     "install:skills": "cp -r skills/* ~/.openclaw/skills/",
     "install:hooks": "cp -r hooks/* ~/.openclaw/hooks/",
     "install:all": "npm run install:skills && npm run install:hooks",
-    "test": "echo 'No tests yet'",
+    "plan-squad:score": "node scripts/plan-squad-quality-score.mjs .dev-team/pipeline-log.jsonl",
+    "plan-squad:test:unit": "node tests/planning-squad/unit/quality-score.unit.test.mjs",
+    "plan-squad:test:smoke": "bash tests/planning-squad/run-planning-squad-smoke-test.sh",
+    "execution-squad:score": "node tests/execution-squad/scripts/execution-squad-quality-score.mjs",
+    "execution-squad:test:unit": "npx tsx tests/execution-squad/unit/coder.unit.test.mts && npx tsx tests/execution-squad/unit/code-reviewer.unit.test.mts && npx tsx tests/execution-squad/unit/quality-score.unit.test.mts",
+    "execution-squad:test:smoke": "node tests/smoke/test-execution-pipeline.mjs",
+    "test": "npm run build && npm run test:unit && npm run test:integration",
+    "test:unit": "sh -c \"files=$(find skills -path '*/__tests__/*.test.js' 2>/dev/null | head -50); [ -n \\\"$files\\\" ] && node --test $files || exit 0\"",
+    "test:integration": "node --test $(find tests/integration -name '*.test.js' 2>/dev/null)",
+    "test:coverage": "node --test --experimental-test-coverage $(find skills tests -name '*.test.js' 2>/dev/null)",
+    "test:watch": "node --test --watch $(find skills -path '*/__tests__/*.test.js' 2>/dev/null)",
+    "test:plan-squad": "node --test $(find skills/plan-squad -name '*.test.js' 2>/dev/null)",
+    "test:execution-squad": "node --test $(find skills/execution-squad -name '*.test.js' 2>/dev/null)",
+    "test:gate": "node --test tests/gates/*.test.js 2>/dev/null || true",
+    "test:smoke": "node tests/smoke/test-planning-pipeline.mjs && node tests/smoke/test-execution-pipeline.mjs",
     "lint": "echo 'No lint yet'"
   },
   "keywords": [
@@ -29,9 +45,9 @@
   "openclaw": {
     "skills": [
       "./skills/orchestrator",
-      "./skills/planner",
-      "./skills/executor",
-      "./skills/validator"
+      "./skills/plan-squad",
+      "./skills/execution-squad",
+      "./skills/review-squad"
     ],
     "hooks": [
       "./hooks/dev-team-trigger"

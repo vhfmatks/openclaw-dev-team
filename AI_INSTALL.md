@@ -11,6 +11,29 @@ Type: OpenClaw Skills + Hooks package
 Repository: https://github.com/vhfmatks/openclaw-dev-team
 ```
 
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                     dev-team:orchestrator                         │
+│                       (Main Orchestrator)                         │
+└──────────────────────────────────────────────────────────────────┘
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        ▼                       ▼                       ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│   Plan Squad  │    │Execution Squad│    │ Review Squad  │
+│  planning-squad│───▶│execution-squad│───▶│ review-squad  │
+│   Phase 1     │    │   Phase 2     │    │   Phase 3     │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                    │                    │
+   ┌────┴────┐          ┌────┴────┐         ┌─────┴─────┐
+   ▼         ▼          ▼         ▼         ▼     ▼     ▼
+Planner   Critic     Coder   Reviewer   Reviewer QA    Final
+                      CodeRev Tester            Tester Approver
+                      DepMgr
+```
+
 ## Prerequisites
 
 ```
@@ -36,28 +59,35 @@ cd openclaw-dev-team
 
 ### Step 2: Install Skills
 
-Copy skills to OpenClaw skills directory:
+Copy ALL skills to OpenClaw skills directory:
 
 ```bash
 # Create target directory if not exists
 mkdir -p ~/.openclaw/skills
 
-# Copy all skills (note: folder names differ from skill names)
-cp -r skills/dev-team-start ~/.openclaw/skills/
-cp -r skills/orchestrator ~/.openclaw/skills/dev-team-orchestrator
-cp -r skills/planner ~/.openclaw/skills/dev-team-planner
-cp -r skills/executor ~/.openclaw/skills/dev-team-executor
-cp -r skills/validator ~/.openclaw/skills/dev-team-validator
+# Copy all skills (folder name = skill name)
+cp -r skills/* ~/.openclaw/skills/
 ```
 
 Expected result:
 ```
 ~/.openclaw/skills/
+├── orchestrator/SKILL.md
 ├── dev-team-start/SKILL.md
-├── dev-team-orchestrator/SKILL.md
-├── dev-team-planner/SKILL.md
-├── dev-team-executor/SKILL.md
-└── dev-team-validator/SKILL.md
+├── plan-squad/SKILL.md
+├── planner/SKILL.md
+├── critic/SKILL.md
+├── architecture/SKILL.md
+├── execution-squad/SKILL.md
+├── coder/SKILL.md
+├── code-reviewer/SKILL.md
+├── tester/SKILL.md
+├── dependency-manager/SKILL.md
+├── review-squad/SKILL.md           # NEW
+├── reviewer/SKILL.md               # NEW
+├── qa-tester/SKILL.md              # NEW
+├── final-approver/SKILL.md         # NEW
+└── validator/SKILL.md              # DEPRECATED
 ```
 
 ### Step 3: Install Hooks
@@ -65,131 +95,131 @@ Expected result:
 Copy hooks to OpenClaw hooks directory:
 
 ```bash
-# Create target directory if not exists
 mkdir -p ~/.openclaw/hooks
-
-# Copy hook (must include handler.js)
 cp -r hooks/dev-team-trigger ~/.openclaw/hooks/
-
-# Verify handler.js exists (required for execution)
 ls ~/.openclaw/hooks/dev-team-trigger/handler.js
-```
-
-Expected result:
-```
-~/.openclaw/hooks/
-└── dev-team-trigger/
-    ├── HOOK.md      (metadata)
-    ├── handler.js   (executable - REQUIRED)
-    └── handler.ts   (source - optional)
 ```
 
 ### Step 4: Create Workspace
 
-Create workspace directories for state management:
-
 ```bash
-mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory}
+mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots}
 ```
 
 ### Step 5: Enable Components
 
-Enable skills and hooks via OpenClaw CLI:
-
 ```bash
-# Enable all skills
-openclaw skills enable dev-team-start
-openclaw skills enable dev-team-orchestrator
-openclaw skills enable dev-team-planner
-openclaw skills enable dev-team-executor
-openclaw skills enable dev-team-validator
+# Orchestrator
+openclaw skills enable dev-team:orchestrator
+openclaw skills enable dev-team:start
 
-# Enable hook
+# Plan Squad
+openclaw skills enable dev-team:planning-squad
+openclaw skills enable dev-team:planning-planner
+openclaw skills enable dev-team:planning-critic
+openclaw skills enable dev-team:planning-architecture
+
+# Execution Squad
+openclaw skills enable dev-team:execution-squad
+openclaw skills enable dev-team:execution-coder
+openclaw skills enable dev-team:execution-code-reviewer
+openclaw skills enable dev-team:execution-tester
+openclaw skills enable dev-team:execution-dependency-manager
+
+# Review Squad (NEW)
+openclaw skills enable dev-team:review-squad
+openclaw skills enable dev-team:review-reviewer
+openclaw skills enable dev-team:review-qa-tester
+openclaw skills enable dev-team:review-final-approver
+
+# Hooks
 openclaw hooks enable dev-team-trigger
 ```
 
 ### Step 6: Restart OpenClaw
 
-Restart OpenClaw to load new components:
-
 ```bash
 openclaw restart
 ```
 
-Or if running as a service:
-```bash
-# macOS: Use menu bar app to restart
-# Linux: systemctl restart openclaw
+## Skills Reference (21 Skills)
+
+### Orchestrator (2)
+
+| Skill Name | Folder | Purpose |
+|------------|--------|---------|
+| `dev-team:orchestrator` | orchestrator/ | Main pipeline coordinator |
+| `dev-team:start` | dev-team-start/ | Entry point, creates project |
+
+### Plan Squad (4)
+
+| Skill Name | Folder | Purpose |
+|------------|--------|---------|
+| `dev-team:planning-squad` | plan-squad/ | Squad leader |
+| `dev-team:planning-planner` | planner/ | Requirements analysis |
+| `dev-team:planning-critic` | critic/ | Plan review, reject/rework |
+| `dev-team:planning-architecture` | architecture/ | Infrastructure design (optional) |
+
+### Execution Squad (5)
+
+| Skill Name | Folder | Purpose |
+|------------|--------|---------|
+| `dev-team:execution-squad` | execution-squad/ | Squad leader |
+| `dev-team:execution-coder` | coder/ | Code generation |
+| `dev-team:execution-code-reviewer` | code-reviewer/ | Static analysis |
+| `dev-team:execution-tester` | tester/ | Test execution |
+| `dev-team:execution-dependency-manager` | dependency-manager/ | Package installation (optional) |
+
+### Review Squad (4) - NEW
+
+| Skill Name | Folder | Purpose |
+|------------|--------|---------|
+| `dev-team:review-squad` | review-squad/ | Squad leader, mode determination |
+| `dev-team:review-reviewer` | reviewer/ | Requirements↔Plan↔Implementation check |
+| `dev-team:review-qa-tester` | qa-tester/ | Human-like testing (Browser/CLI) |
+| `dev-team:review-final-approver` | final-approver/ | Final approval, auto-routing |
+
+### Deprecated (1)
+
+| Skill Name | Folder | Status |
+|------------|--------|--------|
+| `dev-team:validation-validator` | validator/ | DEPRECATED → use `review-qa-tester` |
+
+## Pipeline Flow
+
+```
+Phase 1          Phase 2           Phase 3           Phase 4
+┌────────┐      ┌────────┐        ┌────────┐        ┌────────┐
+│  Plan  │ ───▶ │Execute │ ─────▶ │ Review │ ─────▶ │Delivery│
+│ Squad  │      │ Squad  │        │ Squad  │        │        │
+└────────┘      └────────┘        └────────┘        └────────┘
+     │               │                  │
+     ▼               ▼                  ▼
+  Rework          Rework            Routing
+  (max 3)         (max 3)           ┌─────┴─────┐
+                                    ▼           ▼
+                              → Planner    → Executor
 ```
 
-## Verification
+### Review Squad Modes
 
-### Verify Skills Installation
+| Mode | Components | Use Case |
+|------|------------|----------|
+| **Basic** | Reviewer only | Simple fixes, style changes, 1-2 files |
+| **Full** | Reviewer + QA Tester + Final Approver | Feature additions/changes, 3+ files |
 
-```bash
-openclaw skills list | grep dev-team
-```
+### Routing Rules (on rejection)
 
-Expected output:
-```
-dev-team-start
-dev-team-orchestrator
-dev-team-planner
-dev-team-executor
-dev-team-validator
-```
-
-### Verify Hooks Installation
-
-```bash
-openclaw hooks list | grep dev-team
-```
-
-Expected output:
-```
-dev-team-trigger
-```
-
-### Verify File Structure
-
-```bash
-ls ~/.openclaw/skills/dev-team-*
-ls ~/.openclaw/hooks/dev-team-*
-```
-
-### Functional Test
-
-Send a test message via Telegram:
-```
-테스트 기능 만들어줘
-```
-
-Expected response:
-```
-🔄 개발 요청을 감지했습니다. 작업을 시작합니다...
-```
-
-## Components
-
-### Skills
-
-| Name | Purpose | Location |
-|------|---------|----------|
-| dev-team-start | Entry point - creates project and starts pipeline | ~/.openclaw/skills/dev-team-start/ |
-| dev-team-orchestrator | Pipeline coordinator | ~/.openclaw/skills/dev-team-orchestrator/ |
-| dev-team-planner | Planning agent | ~/.openclaw/skills/dev-team-planner/ |
-| dev-team-executor | Code generation | ~/.openclaw/skills/dev-team-executor/ |
-| dev-team-validator | Browser testing | ~/.openclaw/skills/dev-team-validator/ |
-
-### Hooks
-
-| Name | Event | Purpose |
-|------|-------|---------|
-| dev-team-trigger | message:received | Detect dev requests and notify user |
+| Rejection Reason | Route To |
+|------------------|----------|
+| `missing_feature` | Planner |
+| `plan_deviation` | Planner |
+| `incomplete_implementation` | Executor |
+| QA test failure | Executor |
 
 ## Usage
 
-### Primary Method: Slash Command
+### Slash Command
 
 ```
 /dev-team-start <feature description>
@@ -208,49 +238,68 @@ Examples:
 2. Sets up workspace: `.dev-team/` with state, plans, reports
 3. Initializes project state files
 4. Starts the dev team pipeline:
-   - Phase 1: Analysis (Planner)
-   - Phase 2: Implementation (Executor)
-   - Phase 3: Validation (Validator)
+   - Phase 1: Plan Squad (Planner → Critic → Architecture)
+   - Phase 2: Execution Squad (Coder → CodeReviewer → Tester)
+   - Phase 3: Review Squad (Reviewer → QA Tester → Final Approver)
    - Phase 4: Delivery
 
-### Hook Method: Keyword Detection
+## Verification
 
-The hook detects dev request keywords in messages:
-- Korean: 만들어줘, 구현해줘, 개발해줘, 추가해줘
-- English: build me, create, implement, develop
+### Verify Skills
 
-When detected, it sends a notification message.
-
-## Workflow
-
-```
-1. User sends message via Telegram: "대시보드 만들어줘"
-2. dev-team-trigger Hook detects dev request keyword
-3. Hook invokes dev-team-orchestrator Skill
-4. Orchestrator runs pipeline:
-   - Phase 1: Planner analyzes request
-   - Phase 2: Executor generates code
-   - Phase 3: Validator tests in browser
-   - Phase 4: Results sent to user
+```bash
+openclaw skills list | grep dev-team
 ```
 
-## Configuration
-
-### Environment Variables (Optional)
-
-Create `~/.openclaw/workspace/dev-team/.env`:
-
+Expected output includes:
 ```
-DEV_TEAM_MAX_RETRIES=3
-DEV_TEAM_TIMEOUT=3600000
-DEV_TEAM_ENABLE_SCREENSHOTS=true
+dev-team:start
+dev-team:orchestrator
+dev-team:planning-squad
+dev-team:execution-squad
+dev-team:review-squad
+dev-team:review-reviewer
+dev-team:review-qa-tester
+dev-team:review-final-approver
 ```
 
-### Trigger Keywords
+### Verify Hooks
 
-The hook responds to these keywords:
-- Korean: 만들어줘, 구현해줘, 개발해줘, 추가해줘, 수정해줘, 고쳐줘
-- English: build me, create, implement, develop, make a, add a, fix the
+```bash
+openclaw hooks list | grep dev-team
+# Output: dev-team-trigger
+```
+
+### Functional Test
+
+Send a test message:
+```
+테스트 기능 만들어줘
+```
+
+Expected response:
+```
+🔄 개발 요청을 감지했습니다. 작업을 시작합니다...
+📋 Phase 1: Planning...
+💻 Phase 2: Execution...
+✅ Phase 3: Review...
+🚀 Phase 4: Delivery
+```
+
+## Docker Deployment
+
+```bash
+# Copy skills/hooks to docker directory
+cp -r skills/* docker/skills/
+cp -r hooks/* docker/hooks/
+
+# Start container
+cd docker
+docker compose up -d
+
+# Verify skills loaded
+docker exec openclaw-dev-team-gateway node dist/index.js skills | grep dev-team
+```
 
 ## Troubleshooting
 
@@ -258,187 +307,58 @@ The hook responds to these keywords:
 
 ```bash
 # Check SKILL.md format
-cat ~/.openclaw/skills/dev-team-orchestrator/SKILL.md | head -10
+cat ~/.openclaw/skills/review-squad/SKILL.md | head -10
 
 # Should have YAML frontmatter:
 # ---
-# name: dev-team-orchestrator
+# name: dev-team:review-squad
 # description: ...
 # ---
 ```
 
-### Hooks not triggering
+### Canvas Unauthorized
 
 ```bash
-# Check hook status
-openclaw hooks check
+# 1) Open Control UI: http://localhost:18789/
+# 2) Get gateway token
+openclaw config get gateway.auth.token
 
-# Re-enable hook
-openclaw hooks disable dev-team-trigger
-openclaw hooks enable dev-team-trigger
+# 3) Paste token in Settings and connect
 ```
 
-### Permission errors
+### Pairing Required
 
 ```bash
-# Fix permissions
-chmod -R 755 ~/.openclaw/skills/
-chmod -R 755 ~/.openclaw/hooks/
+openclaw devices list
+openclaw devices approve --latest
 ```
 
-### Logs
-
-```bash
-# View OpenClaw logs
-tail -f ~/.openclaw/gateway.log
-
-# Filter for dev-team
-tail -f ~/.openclaw/gateway.log | grep -i "dev-team"
-```
-
-## Reinstallation
-
-If components are not working correctly, perform a clean reinstall:
-
-```bash
-# Step 1: Remove existing installation
-rm -rf ~/.openclaw/skills/dev-team-orchestrator
-rm -rf ~/.openclaw/skills/dev-team-planner
-rm -rf ~/.openclaw/skills/dev-team-executor
-rm -rf ~/.openclaw/skills/dev-team-validator
-rm -rf ~/.openclaw/hooks/dev-team-trigger
-
-# Step 2: Download fresh copy
-rm -rf /tmp/openclaw-dev-team
-git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team
-cd /tmp/openclaw-dev-team
-
-# Step 3: Install skills
-cp -r skills/dev-team-orchestrator ~/.openclaw/skills/
-cp -r skills/dev-team-planner ~/.openclaw/skills/
-cp -r skills/dev-team-executor ~/.openclaw/skills/
-cp -r skills/dev-team-validator ~/.openclaw/skills/
-
-# Step 4: Install hooks (must include handler.js)
-cp -r hooks/dev-team-trigger ~/.openclaw/hooks/
-
-# Step 5: Verify handler.js exists
-ls -la ~/.openclaw/hooks/dev-team-trigger/
-# Must show: HOOK.md, handler.js
-
-# Step 6: Create workspace
-mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory}
-
-# Step 7: Enable components
-openclaw skills enable dev-team-orchestrator
-openclaw skills enable dev-team-planner
-openclaw skills enable dev-team-executor
-openclaw skills enable dev-team-validator
-openclaw hooks enable dev-team-trigger
-
-# Step 8: Restart OpenClaw
-openclaw restart
-```
-
-### Common Reinstallation Issues
-
-**Issue: "Hook has HOOK.md but no handler file"**
-
-This means `handler.js` is missing. OpenClaw requires JavaScript files, not TypeScript.
-
-```bash
-# Verify handler.js exists
-ls ~/.openclaw/hooks/dev-team-trigger/handler.js
-
-# If missing, copy again from repository
-cp /tmp/openclaw-dev-team/hooks/dev-team-trigger/handler.js ~/.openclaw/hooks/dev-team-trigger/
-```
-
-**Issue: Hook not in `openclaw hooks list`**
-
-```bash
-# Check hook directory structure
-ls -la ~/.openclaw/hooks/dev-team-trigger/
-
-# Required files:
-# - HOOK.md (with YAML frontmatter)
-# - handler.js (executable JavaScript)
-
-# Re-enable
-openclaw hooks enable dev-team-trigger
-openclaw restart
-```
-
-## Uninstallation
-
-```bash
-# Remove skills
-rm -rf ~/.openclaw/skills/dev-team-orchestrator
-rm -rf ~/.openclaw/skills/dev-team-planner
-rm -rf ~/.openclaw/skills/dev-team-executor
-rm -rf ~/.openclaw/skills/dev-team-validator
-
-# Remove hooks
-rm -rf ~/.openclaw/hooks/dev-team-trigger
-
-# Remove workspace (optional)
-rm -rf ~/.openclaw/workspace/dev-team
-
-# Restart OpenClaw
-openclaw restart
-```
-
-## Quick Commands Reference
+## Quick Commands
 
 ```bash
 # Full Install (one-liner)
 git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team && \
 cp -r /tmp/openclaw-dev-team/skills/* ~/.openclaw/skills/ && \
 cp -r /tmp/openclaw-dev-team/hooks/* ~/.openclaw/hooks/ && \
-mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots,memory} && \
-openclaw skills enable dev-team-start dev-team-orchestrator dev-team-planner dev-team-executor dev-team-validator && \
-openclaw hooks enable dev-team-trigger && \
+mkdir -p ~/.openclaw/workspace/dev-team/{state,plans,reports,screenshots} && \
 openclaw restart
 
 # Verify
 openclaw skills list | grep dev-team
-openclaw hooks list | grep dev-team
 ls ~/.openclaw/hooks/dev-team-trigger/handler.js
 
-# Test
-# In Telegram: /dev-team-start dashboard 기능 개발
-
-# Reinstall (clean)
-rm -rf ~/.openclaw/skills/dev-team-* ~/.openclaw/hooks/dev-team-* && \
-git clone https://github.com/vhfmatks/openclaw-dev-team.git /tmp/openclaw-dev-team && \
-cp -r /tmp/openclaw-dev-team/skills/* ~/.openclaw/skills/ && \
-cp -r /tmp/openclaw-dev-team/hooks/* ~/.openclaw/hooks/ && \
-openclaw restart
-
 # Uninstall
-rm -rf ~/.openclaw/skills/dev-team-* ~/.openclaw/hooks/dev-team-*
+rm -rf ~/.openclaw/skills/{orchestrator,plan-squad,execution-squad,review-squad,reviewer,qa-tester,final-approver,dev-team-start,planner,critic,architecture,coder,code-reviewer,tester,dependency-manager,validator}
+rm -rf ~/.openclaw/hooks/dev-team-trigger
 openclaw restart
 ```
 
-## File Verification
+## File Locations
 
-After installation, verify ALL critical files exist:
-
-```bash
-# Skills (4 files)
-ls ~/.openclaw/skills/dev-team-orchestrator/SKILL.md
-ls ~/.openclaw/skills/dev-team-planner/SKILL.md
-ls ~/.openclaw/skills/dev-team-executor/SKILL.md
-ls ~/.openclaw/skills/dev-team-validator/SKILL.md
-
-# Hooks (2 files required)
-ls ~/.openclaw/hooks/dev-team-trigger/HOOK.md
-ls ~/.openclaw/hooks/dev-team-trigger/handler.js   # MUST EXIST
-```
-
-If `handler.js` is missing, the hook will NOT work. Reinstall from repository.
-
-## Contact
-
-- Repository: https://github.com/vhfmatks/openclaw-dev-team
-- Issues: https://github.com/vhfmatks/openclaw-dev-team/issues
+| Item | Path |
+|------|------|
+| Skills | `~/.openclaw/skills/*/` |
+| Hooks | `~/.openclaw/hooks/dev-team-trigger/` |
+| Workspace | `~/.openclaw/workspace/dev-team/` |
+| Pipeline Log | `~/.openclaw/workspace/dev-team/pipeline-log.jsonl` |
+| Logs | `~/.openclaw/gateway.log` |
