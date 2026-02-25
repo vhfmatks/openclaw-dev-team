@@ -16,8 +16,8 @@ Review Squad Leader는 검수 팀의 리더로서, Execution Squad가 작성한 
 사용자의 원본 요청을 충족하는지 검증하고, 승인/반려를 결정한다.
 Final Approver의 판정에 따라 Planner 또는 Executor로 routing하며,
 최대 3회의 Rework 루프를 관리한다.
-
-## 조직 구조
+#YT|
+#MY|## 조직 구조
 
 ```
 Review Squad Leader (이 Skill)
@@ -25,23 +25,32 @@ Review Squad Leader (이 Skill)
     ├── Reviewer (요구사항 검수) - 필수
     │     • 최초 요구사항 vs 계획 vs 구현 일치성 검수
     │
-    #JM|    ├── QA Tester / OpenClaw Tester (Human-like 테스트) - Full 모드만
-#NV|    │     • OpenClaw Browser/CLI로 실제 테스트
-#YS|    │     • Accessibility Tree 기반 Self-healing
-#YS|    │     • 자연어 → Playwright 변환
+    ├── QA Tester (Human-like 테스트) - Full 모드
     │     • OpenClaw Browser/CLI로 실제 테스트
+    │     • CLI/API 테스트
     │
-    └── Final Approver (최종 승인) - Full 모드만
-          • 결과 취합 → 승인/반려 + 자동 routing
+    ├── OpenClaw Tester (Self-healing 테스트) - Full + Frontend
+    │     ⚡ 기본 활성화 (hasFrontend 시 자동 실행)
+    │     • Accessibility Tree 기반 Self-healing
+    │     • 자연어 → Playwright 변환
+    │     • 병렬 테스트 실행
+    │     • Evidence 수집 (필수)
+    │
+    └── Final Approver (최종 승인) - Full 모드
+          • Reviewer + QA + OpenClaw 결과 취합
+          • 승인/반려 + 자동 routing
 ```
 
 ## 운영 모드
 
-| 모드 | 멤버 | 판단 기준 | 예시 |
-|------|------|-----------|------|
-| **Basic** | Reviewer만 | 단순 수정, 스타일 변경, 1-2개 파일 | 텍스트 수정, CSS 변경 |
-| **Full** | Reviewer + QA Tester + Final Approver | 기능 추가/변경, 3개 이상 파일 | 새 컴포넌트, API 추가 |
+#YB|| 모드 | 멤버 | OpenClaw Tester | 판단 기준 | 예시 |
+|------|------|-----------------|-----------|------|
+| **Basic** | Reviewer만 | ❌ 비활성 | 단순 수정, 1-2개 파일 | 텍스트 수정, CSS |
+| **Full** | Reviewer + QA + Final | ⚡ hasFrontend 시 활성 | 기능 추가/변경, 3개+ 파일 | 새 컴포넌트, API |
 
+**OpenClaw Tester 자동 활성화 조건:**
+- Full 모드 + `hasFrontend: true`
+- Staging/Production 환경에서 Human-like 테스트 필요 시
 ## 입력
 
 ```typescript
@@ -187,13 +196,74 @@ async function runQATester(input: ReviewSquadInput): Promise<QATesterResult | un
     failed: result.summary.failed
   });
   
-  return result;
-}
+  #HW|  return result;
+#KM|}
 
 function determineTestType(context: ReviewContext): 'browser' | 'cli' | 'both' {
   if (context.hasFrontend && context.hasBackend) return 'both';
   if (context.hasFrontend) return 'browser';
   return 'cli';
+}
+```
+
+### Step 3-1: OpenClaw Tester 실행 (Full 모드 + hasFrontend)
+
+```typescript
+async function runOpenClawTester(input: ReviewSquadInput): Promise<OpenClawTesterResult | undefined> {
+  // Full 모드이고 Frontend가 있는 경우 실행
+  if (mode !== 'full' || !input.context.hasFrontend) return undefined;
+  
+  logEvent({
+    event: 'openclaw:start',
+    mode: 'hybrid',
+    scenarios: input.plan.validation_criteria.length
+  });
+  
+  try {
+    const result = await invokeSkill('dev-team:review-openclaw-tester', {
+      execution: input.execution,
+      context: input.context,
+      testScenarios: input.plan.validation_criteria,
+      mode: 'hybrid',
+      naturalLanguageScenarios: convertToNLCenarios(input.plan.validation_criteria),
+      config: {
+        stagingUrl: process.env.STAGING_URL,
+        parallelism: 4,
+        timeout: 120000,
+        captureScreenshots: true,
+        captureVideo: false,
+        generatePlaywrightScript: true,
+        outputDir: '.dev-team/evidence'
+      }
+    });
+    
+    logEvent({
+      event: 'openclaw:result',
+      status: result.status,
+      passed: result.summary.passed,
+      failed: result.summary.failed,
+      selfHealingRate: result.selfHealingStats?.rate
+    });
+    
+    return result;
+  } catch (error) {
+    // OpenClaw Tester 실패 시 QA Tester 결과만 사용
+    logEvent({
+      event: 'openclaw:error',
+      error: error.message
+    });
+    return undefined;
+  }
+}
+
+function convertToNLCenarios(criteria: ValidationCriteria[]): NaturalLanguageScenario[] {
+  return criteria.map((c, i) => ({
+    id: `scenario-${i}`,
+    name: c.scenario,
+    description: c.expected,
+    steps: [c.scenario],
+    expected: c.expected
+  }));
 }
 ```
 
@@ -203,8 +273,8 @@ function determineTestType(context: ReviewContext): 'browser' | 'cli' | 'both' {
 async function runFinalApprover(
   input: ReviewSquadInput,
   reviewerResult: ReviewerResult,
-  qaResult: QATesterResult | undefined
-): Promise<FinalApproverResult | undefined> {
+  #KV|  qaResult: QATesterResult | undefined,
+  openclawResult: OpenClawTesterResult | undefined
   if (mode !== 'full') return undefined;
   
   logEvent({
@@ -212,10 +282,10 @@ async function runFinalApprover(
   });
   
   const result = await invokeSkill('dev-team:review-final-approver', {
-    originalRequest: input.originalRequest,
+    #WN|    originalRequest: input.originalRequest,
     reviewerResult,
-    qaResult
-  });
+    qaResult,
+    openclawResult  // OpenClaw Tester 결과 추가
   
   logEvent({
     event: 'approver:result',
@@ -378,14 +448,17 @@ function calculateQualityScore(params: {
 
 ## Pipeline Log 이벤트
 
-| 이벤트 | 설명 | 예시 |
+#ZT|| 이벤트 | 설명 | 예시 |
 |--------|------|------|
-| `squad:start` | Squad 시작 | `{"event":"squad:start","mode":"full","members":["reviewer","qa-tester","approver"]}` |
+| `squad:start` | Squad 시작 | `{"event":"squad:start","mode":"full","members":["reviewer","qa-tester","openclaw-tester","approver"]}` |
 | `squad:complete` | Squad 완료 | `{"event":"squad:complete","status":"approved","iterations":1}` |
 | `reviewer:start` | Reviewer 시작 | `{"event":"reviewer:start"}` |
 | `reviewer:result` | Reviewer 결과 | `{"event":"reviewer:result","status":"pass","mismatches":0}` |
 | `qa:start` | QA 시작 | `{"event":"qa:start","testType":"browser"}` |
 | `qa:result` | QA 결과 | `{"event":"qa:result","status":"passed","passed":5,"failed":0}` |
+| `openclaw:start` | OpenClaw Tester 시작 | `{"event":"openclaw:start","mode":"hybrid","scenarios":5}` |
+| `openclaw:result` | OpenClaw Tester 결과 | `{"event":"openclaw:result","status":"passed","selfHealingRate":95}` |
+| `openclaw:error` | OpenClaw Tester 에러 | `{"event":"openclaw:error","error":"..."}` |
 | `approver:start` | Approver 시작 | `{"event":"approver:start"}` |
 | `approver:result` | Approver 결과 | `{"event":"approver:result","status":"approved"}` |
 | `rework:start` | Rework 시작 | `{"event":"rework:start","iteration":1,"routeTo":"executor"}` |
@@ -439,19 +512,17 @@ Squad 완료 전 확인:
 
 - [ ] 적절한 모드로 멤버 구성됨
 - [ ] 모든 Pipeline Log 이벤트 기록됨
-- [ ] Reviewer 실행 및 결과 기록됨
-- [ ] Full 모드: QA Tester + Final Approver 실행됨
+#TP|- [ ] Reviewer 실행 및 결과 기록됨
+- [ ] Full 모드: QA Tester + OpenClaw Tester + Final Approver 실행됨
 - [ ] 반려 시 올바른 routing 결정됨
 - [ ] Rework 루프 최대 3회 준수
 - [ ] `quality` 점수 계산 후 `quality:score` 이벤트 기록됨
 
 ## 의존성
 
-#PR|- `dev-team:review-reviewer` Skill - 필수
-#TW|- `dev-team:review-qa-tester` Skill - Full 모드
-#RH|- `dev-team:review-openclaw-tester` Skill - Full 모드 (선택적)
-#NX|- `dev-team:review-final-approver` Skill - Full 모드
+- `dev-team:review-reviewer` Skill - 필수
 - `dev-team:review-qa-tester` Skill - Full 모드
+- `dev-team:review-openclaw-tester` Skill - Full + Frontend (⚡ 기본 활성화)
 - `dev-team:review-final-approver` Skill - Full 모드
 
 ## 에러 처리
