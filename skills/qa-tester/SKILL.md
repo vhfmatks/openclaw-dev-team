@@ -456,22 +456,202 @@ echo '{"event":"qa:screenshot","path":"screenshots/qa-login-01.png"}' >> .dev-te
 
 # QA 테스트 완료
 echo '{"event":"qa:result","status":"passed","passed":4,"failed":1,"skipped":0}' >> .dev-team/pipeline-log.jsonl
+#BH|```
+
+#XX|
+
+### Accessibility Tree 기반 Self-healing 테스트
+
+CSS Selector 대신 Accessibility Tree의 ref를 사용하여 UI 변경에 강건합니다.
+
+```bash
+# 스냅샷 생성
+openclaw browser snapshot --interactive --json
+
+# 출력 예시
+{
+  "refs": {
+    "e1": {"role": "button", "name": "Submit"},
+    "e2": {"role": "textbox", "name": "Email"},
+    "e3": {"role": "link", "name": "Learn More"}
+  }
+}
+
+# Ref 기반 상호작용
+openclaw browser click @e1
+openclaw browser type @e2 "test@example.com"
 ```
 
-## 품질 체크리스트
+**Self-healing 원리:**
+- 버튼의 class가 `btn-primary`에서 `button-main`으로 변경되어도
+- 접근성 트리는 여전히 "Submit" 버튼으로 식별
+- `@e1` ref로 동일 요소 클릭 가능
 
-- [ ] 서버가 올바르게 시작됨
-- [ ] Browser가 열리고 페이지가 로드됨
-- [ ] 모든 시나리오가 실행됨
-- [ ] 스크린샷이 캡처됨
-- [ ] 로그가 수집됨
-- [ ] 서버가 정상적으로 종료됨
-- [ ] Pipeline Log가 기록됨
+### 자연어 테스트 시나리오
 
-## 참고
+자연어로 테스트를 정의하고 Playwright 스크립트로 변환합니다.
 
-- [Review Squad Leader](../review-squad/SKILL.md)
-- [Reviewer Skill](../reviewer/SKILL.md)
-- [Final Approver Skill](../final-approver/SKILL.md)
-- OpenClaw Browser: https://docs.openclaw.ai/tools/browser
-- Pipeline Log Format: ../pipeline-log-format.md
+```typescript
+const scenario: NaturalLanguageScenario = {
+  id: 'login-flow',
+  name: '로그인 플로우 테스트',
+  description: '사용자가 이메일로 로그인할 수 있는지 확인',
+  steps: [
+    '로그인 페이지로 이동',
+    '이메일 입력: test@example.com',
+    '비밀번호 입력: password123',
+    '로그인 버튼 클릭',
+    '대시보드 페이지로 이동 확인'
+  ],
+  expected: '대시보드 페이지가 표시됨'
+};
+
+// AI가 Playwright 코드로 변환
+const generated = await generatePlaywrightFromNL(scenario);
+```
+
+### 병렬 테스트 실행
+
+Sub-agents를 사용하여 여러 시나리오를 병렬로 실행합니다.
+
+```typescript
+async function runParallelTests(
+  scenarios: NaturalLanguageScenario[],
+  config: { parallelism: number }
+): Promise<ParallelTestResult[]> {
+  const batches = chunk(scenarios, config.parallelism);
+  const results: ParallelTestResult[] = [];
+  
+  for (const batch of batches) {
+    const batchResults = await Promise.all(
+      batch.map(scenario => runSubAgentTest(scenario))
+    );
+    results.push(...batchResults);
+  }
+  
+  return results;
+}
+```
+
+### Staging 환경 설정
+
+다중 환경 프로파일을 지원합니다.
+
+```json
+{
+  "environments": {
+    "staging": {
+      "frontendUrl": "https://staging.myapp.com",
+      "backendUrl": "https://api-staging.myapp.com"
+    },
+    "production": {
+      "frontendUrl": "https://myapp.com",
+      "backendUrl": "https://api.myapp.com"
+    }
+  },
+  "browser": {
+    "profile": "managed",
+    "cdpUrl": "https://browserless.io?token=xxx"
+  }
+}
+```
+
+## Pipeline Log 이벤트 (확장)
+
+```bash
+# OpenClaw Snapshot 생성
+echo '{"event":"openclaw:snapshot","url":"https://staging.myapp.com","refs":15}' >> .dev-team/pipeline-log.jsonl
+
+# Self-healing 이벤트
+echo '{"event":"openclaw:selfhealing","original":".btn-primary","healed":"@e2","success":true}' >> .dev-team/pipeline-log.jsonl
+
+# 자연어 → Playwright 변환
+echo '{"event":"openclaw:nlp2code","scenario":"login-flow","lines":12}' >> .dev-team/pipeline-log.jsonl
+
+# 병렬 실행
+echo '{"event":"openclaw:parallel","agents":4,"scenarios":8}' >> .dev-team/pipeline-log.jsonl
+```
+
+#KS|- [ ] Accessibility Tree 스냅샷 생성됨
+#NK|- [ ] Self-healing 이벤트 기록됨
+#XW|- [ ] 병렬 실행 결과 취합됨
+#HX|- [ ] Playwright 스크립트 생성됨 (요청 시)
+
+## Evidence 수집 (필수)
+
+모든 테스트 단계에서 **증거(Evidence)**를 체계적으로 수집합니다.
+
+### 필수 Evidence
+
+| 유형 | 설명 | 저장 경로 |
+|------|------|----------|
+| Screenshot | 각 단계별 화면 캡처 | `.dev-team/evidence/screenshots/` |
+| Console Log | 브라우저 콘솔 로그 | `.dev-team/evidence/logs/console/` |
+| Accessibility Tree | 스냅샷 JSON | `.dev-team/evidence/snapshots/` |
+| Pipeline Log | 실행 이벤트 | `.dev-team/pipeline-log.jsonl` |
+
+### Evidence 수집 패턴
+
+```typescript
+async function captureStepEvidence(
+  scenarioId: string,
+  stepIndex: number,
+  action: string
+): Promise<void> {
+  const baseName = `${scenarioId}-step${stepIndex}`;
+  
+  // 1. 스크린샷 (필수)
+  await openclaw.browser.screenshot({
+    path: `.dev-team/evidence/screenshots/${baseName}.png`,
+    fullPage: true
+  });
+  
+  // 2. Console 로그 (필수)
+  const logs = await collectConsoleLogs();
+  await fs.writeFile(
+    `.dev-team/evidence/logs/console/${baseName}.json`,
+    JSON.stringify(logs, null, 2)
+  );
+  
+  // 3. Pipeline Log 이벤트
+  logEvent({
+    event: 'evidence:captured',
+    scenarioId,
+    stepIndex,
+    evidenceType: ['screenshot', 'console'] 
+  });
+}
+```
+
+### 실패 시 추가 Evidence
+
+```typescript
+async function captureFailureEvidence(
+  scenarioId: string,
+  stepIndex: number,
+  error: Error
+): Promise<void> {
+  // ERROR 스크린샷
+  await openclaw.browser.screenshot({
+    path: `.dev-team/evidence/screenshots/${scenarioId}-step${stepIndex}-ERROR.png`,
+    fullPage: true
+  });
+  
+  // 에러 로그
+  logEvent({
+    event: 'evidence:failure',
+    scenarioId,
+    stepIndex,
+    error: error.message,
+    timestamp: new Date().toISOString()
+  });
+}
+```
+
+### Evidence 검증 체크리스트
+
+- [ ] 모든 단계의 스크린샷 존재
+- [ ] 실패 시 ERROR 스크린샷 존재
+- [ ] Console 로그에 에러 없음 (또는 기록됨)
+- [ ] `evidence:captured` 이벤트 기록됨
+- [ ] Evidence Report 생성됨

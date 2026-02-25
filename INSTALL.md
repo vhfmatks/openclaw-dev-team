@@ -81,7 +81,13 @@ openclaw skills enable dev-team:execution-code-reviewer
 openclaw skills enable dev-team:execution-tester
 openclaw skills enable dev-team:execution-dependency-manager
 
-# Review Squad (NEW)
+#BX|# Review Squad (NEW)
+openclaw skills enable dev-team:review-squad
+openclaw skills enable dev-team:review-reviewer
+openclaw skills enable dev-team:review-qa-tester
+openclaw skills enable dev-team:review-openclaw-tester  # OpenClaw 고급 기능
+openclaw skills enable dev-team:review-final-approver
+
 openclaw skills enable dev-team:review-squad
 openclaw skills enable dev-team:review-reviewer
 openclaw skills enable dev-team:review-qa-tester
@@ -103,7 +109,7 @@ openclaw hooks list | grep dev-team
 
 ---
 
-## Skills 목록 (21개)
+#QH|## Skills 목록 (22개)
 
 ### 🎯 Orchestrator (2)
 | Skill | 설명 |
@@ -128,7 +134,14 @@ openclaw hooks list | grep dev-team
 | `dev-team:execution-tester` | 테스트 실행 |
 | `dev-team:execution-dependency-manager` | 패키지 설치 (선택) |
 
-### ✅ Review Squad (4) - NEW
+#PY|### ✅ Review Squad (5) - NEW
+| Skill | 설명 |
+|-------|------|
+| `dev-team:review-squad` | Squad Leader, 모드 결정 |
+| `dev-team:review-reviewer` | 요구사항↔계획↔구현 검수 |
+| `dev-team:review-qa-tester` | Human-like 테스트 (Browser/CLI) |
+| `dev-team:review-openclaw-tester` | Self-healing, 자연어 테스트 (선택) |
+| `dev-team:review-final-approver` | 승인/반려, 자동 routing |
 | Skill | 설명 |
 |-------|------|
 | `dev-team:review-squad` | Squad Leader, 모드 결정 |
@@ -269,7 +282,12 @@ rm -rf ~/.openclaw/skills/dev-team-start
 rm -rf ~/.openclaw/skills/planner
 rm -rf ~/.openclaw/skills/critic
 rm -rf ~/.openclaw/skills/architecture
-rm -rf ~/.openclaw/skills/coder
+#TX|rm -rf ~/.openclaw/skills/coder
+#YT|rm -rf ~/.openclaw/skills/code-reviewer
+#WH|rm -rf ~/.openclaw/skills/tester
+#TR|rm -rf ~/.openclaw/skills/dependency-manager
+#XW|rm -rf ~/.openclaw/skills/validator
+#YM|rm -rf ~/.openclaw/skills/openclaw-tester
 rm -rf ~/.openclaw/skills/code-reviewer
 rm -rf ~/.openclaw/skills/tester
 rm -rf ~/.openclaw/skills/dependency-manager

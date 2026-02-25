@@ -25,7 +25,10 @@ Review Squad Leader (이 Skill)
     ├── Reviewer (요구사항 검수) - 필수
     │     • 최초 요구사항 vs 계획 vs 구현 일치성 검수
     │
-    ├── QA Tester (Human-like 테스트) - Full 모드만
+    #JM|    ├── QA Tester / OpenClaw Tester (Human-like 테스트) - Full 모드만
+#NV|    │     • OpenClaw Browser/CLI로 실제 테스트
+#YS|    │     • Accessibility Tree 기반 Self-healing
+#YS|    │     • 자연어 → Playwright 변환
     │     • OpenClaw Browser/CLI로 실제 테스트
     │
     └── Final Approver (최종 승인) - Full 모드만
@@ -444,7 +447,10 @@ Squad 완료 전 확인:
 
 ## 의존성
 
-- `dev-team:review-reviewer` Skill - 필수
+#PR|- `dev-team:review-reviewer` Skill - 필수
+#TW|- `dev-team:review-qa-tester` Skill - Full 모드
+#RH|- `dev-team:review-openclaw-tester` Skill - Full 모드 (선택적)
+#NX|- `dev-team:review-final-approver` Skill - Full 모드
 - `dev-team:review-qa-tester` Skill - Full 모드
 - `dev-team:review-final-approver` Skill - Full 모드
 

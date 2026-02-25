@@ -220,7 +220,7 @@ export type SquadMode = 'simple' | 'medium' | 'complex';
 /**
  * Pipeline phase
  */
-export type PipelinePhase = 'planning' | 'execution' | 'validation' | 'delivery';
+export type PipelinePhase = 'planning' | 'execution' | 'review' | 'delivery';
 
 /**
  * Task status
@@ -241,6 +241,12 @@ export interface TaskState {
     from: string;
     channelId: string;
   };
+  iterations?: {
+    planning: number;
+    execution: number;
+    review: number;
+    delivery: number;
+  };
   plan: {
     file: string | null;
     status: TaskStatus;
@@ -249,6 +255,13 @@ export interface TaskState {
     filesChanged: string[];
     status: TaskStatus;
   };
+  review: {
+    status: TaskStatus;
+    report: string | null;
+    screenshots: string[];
+    routeTo?: 'planner' | 'executor' | 'delivery';
+  };
+  /** @deprecated Use review instead */
   validation: {
     passed: boolean | null;
     report: string | null;
@@ -787,15 +800,15 @@ export interface DevTeamConfig {
   reportFormat: 'markdown' | 'json';
   planSquad?: {
     maxReworkIterations: number;
-    defaultMode: SquadMode;
-    enableAutoEscalation: boolean;
+    defaultMode?: SquadMode;
+    enableAutoEscalation?: boolean;
   };
   executionSquad?: {
     maxReworkIterations: number;
-    defaultMode: SquadMode;
-    enableAutoEscalation: boolean;
-    runTests: boolean;
-    testTimeout: number;
+    defaultMode?: SquadMode;
+    enableAutoEscalation?: boolean;
+    runTests?: boolean;
+    testTimeout?: number;
   };
   validation?: {
     devServerCommand: string;
@@ -804,6 +817,13 @@ export interface DevTeamConfig {
     captureScreenshots: boolean;
     screenshotOnFailure: boolean;
     collectConsoleErrors: boolean;
+  };
+  reviewSquad?: {
+    maxReworkIterations: number;
+    defaultMode?: ReviewMode;
+    enableAutoRouting?: boolean;
+    enableScreenshots?: boolean;
+    testTimeout?: number;
   };
 }
 
@@ -993,12 +1013,7 @@ export type PipelinePhaseWithReview = 'planning' | 'execution' | 'review' | 'del
  */
 export interface TaskStateWithReview extends TaskState {
   phase: PipelinePhaseWithReview;
-  review?: {
-    status: TaskStatus;
-    report: string | null;
-    screenshots: string[];
-    routeTo?: 'planner' | 'executor' | 'delivery';
-  };
+  // review는 이제 TaskState에서 상속됨
 }
 
 /**
@@ -1037,3 +1052,292 @@ export const TEAM_COMPOSITIONS_WITH_REVIEW: Record<string, TeamComposition> = {
     workflow: 'sequential'
   }
 };
+
+// ============================================================================
+// OpenClaw Testing Types
+// ============================================================================
+
+/**
+ * Accessibility Tree 기반 요소 참조
+ * OpenClaw의 snapshot --interactive 출력에서 추출
+ */
+export interface AccessibilityRef {
+  ref: string;           // 예: "e1", "e2", "e3"
+  role: string;          // ARIA role: "button", "textbox", "link", etc.
+  name: string;          // Accessible name: "Submit", "Email", etc.
+  selector?: string;     // Fallback CSS selector (self-healing용)
+}
+
+/**
+ * OpenClaw Browser Snapshot 결과
+ */
+export interface OpenClawSnapshot {
+  timestamp: string;
+  url: string;
+  title: string;
+  refs: AccessibilityRef[];
+  interactiveOnly: boolean;
+  raw?: string;          // 원본 accessibility tree
+}
+
+/**
+ * 자연어 테스트 시나리오
+ */
+export interface NaturalLanguageScenario {
+  id: string;
+  name: string;
+  description: string;   // 자연어 설명 (예: "로그인 후 대시보드로 이동")
+  steps: string[];       // 자연어 단계들
+  expected: string;      // 예상 결과
+  generated?: {
+    playwrightCode: string;
+    selectors: AccessibilityRef[];
+    timestamp: string;
+  };
+}
+
+/**
+ * 병렬 테스트 실행 결과
+ */
+export interface ParallelTestResult {
+  subAgentId: string;
+  scenarioId: string;
+  status: 'passed' | 'failed' | 'skipped';
+  duration: number;
+  evidence: string[];
+  error?: string;
+}
+
+/**
+ * Self-healing 이벤트
+ */
+export interface SelfHealingEvent {
+  timestamp: string;
+  originalSelector: string;
+  healedRef: string;
+  success: boolean;
+  context: string;
+}
+
+/**
+ * OpenClaw Tester 실행 모드
+ */
+export type OpenClawTesterMode = 'snapshot' | 'natural-language' | 'hybrid';
+
+/**
+ * OpenClaw Tester 입력
+ */
+export interface OpenClawTesterInput {
+  execution: ExecutionSquadOutput;
+  context: {
+    projectRoot: string;
+    projectType: string;
+    hasFrontend: boolean;
+    hasBackend: boolean;
+    testCommands: string[];
+  };
+  testScenarios: ValidationCriteria[];
+  mode: OpenClawTesterMode;
+  naturalLanguageScenarios?: NaturalLanguageScenario[];
+  config: {
+    stagingUrl?: string;
+    productionUrl?: string;
+    browserProfile: 'managed' | 'cdp' | 'extension';
+    cdpUrl?: string;
+    extensionId?: string;
+    parallelism: number;
+    timeout: number;
+    captureScreenshots: boolean;
+    captureVideo: boolean;
+    generatePlaywrightScript: boolean;
+    outputDir: string;
+  };
+}
+
+/**
+ * OpenClaw Tester 결과
+ */
+export interface OpenClawTesterResult {
+  status: 'passed' | 'failed' | 'partial';
+  testType: 'browser' | 'cli' | 'both';
+  mode: OpenClawTesterMode;
+  
+  // 기본 테스트 결과
+  scenarios: QAScenarioResult[];
+  screenshots: string[];
+  videos?: string[];
+  logs: string[];
+  summary: {
+    total: number;
+    passed: number;
+    failed: number;
+    skipped: number;
+  };
+  
+  // OpenClaw 전용 결과
+  snapshot?: OpenClawSnapshot;
+  playwrightScripts?: {
+    scenarioId: string;
+    code: string;
+    path: string;
+  }[];
+  parallelResults?: ParallelTestResult[];
+  selfHealingEvents?: SelfHealingEvent[];
+  
+  // 환경 정보
+  environment?: {
+    frontendUrl?: string;
+    backendUrl?: string;
+    browserProfile: string;
+    parallelism: number;
+  };
+  
+  // 통계
+  selfHealingStats?: {
+    total: number;
+    successful: number;
+    rate: number;  // percentage
+  };
+}
+#MM|  }
+];
+
+// ============================================================================
+// Evidence Types
+// ============================================================================
+
+/**
+ * Evidence 유형
+ */
+export type EvidenceType = 'screenshot' | 'video' | 'log' | 'snapshot' | 'script';
+
+/**
+ * 테스트 단계별 Evidence
+ */
+export interface Evidence {
+  id: string;              // evidence-20260225-001-step-03
+  timestamp: string;
+  type: EvidenceType;
+  path: string;
+  metadata: {
+    scenarioId: string;
+    stepIndex: number;
+    action: string;
+    url: string;
+    duration?: number;
+    error?: string;
+  };
+}
+
+/**
+ * Evidence 수집기
+ */
+export interface EvidenceCollector {
+  startSession(scenarioId: string): void;
+  captureStep(stepIndex: number, action: string): Evidence;
+  recordSelfHealing(event: SelfHealingEvent): void;
+  finalizeSession(result: QATesterResult): EvidenceReport;
+}
+
+/**
+ * Evidence Report
+ */
+export interface EvidenceReport {
+  sessionId: string;
+  scenarioId: string;
+  startedAt: string;
+  completedAt: string;
+  status: 'passed' | 'failed';
+  evidence: Evidence[];
+  summary: {
+    totalSteps: number;
+    capturedEvidence: number;
+    selfHealingEvents: number;
+  };
+}
+
+
+/**
+ * OpenClaw Tester를 포함한 Review Squad 출력
+ */
+export interface ReviewSquadOutputWithOpenClaw extends ReviewSquadOutput {
+  openclawTester?: OpenClawTesterResult;
+  summary: {
+    totalIssues: number;
+    criticalIssues: number;
+    testPassRate: number;
+    selfHealingRate?: number;
+  };
+#ZW|}
+
+/**
+ * Evidence 수집 관련 타입
+ */
+
+/**
+ * Evidence 유형
+ */
+export type EvidenceType = 'screenshot' | 'video' | 'log' | 'snapshot' | 'script';
+
+/**
+ * 개별 Evidence 항목
+ */
+export interface Evidence {
+  id: string;              // evidence-20260225-001-step-03
+  timestamp: string;
+  type: EvidenceType;
+  path: string;
+  metadata: {
+    scenarioId: string;
+    stepIndex: number;
+    action: string;
+    url: string;
+    duration?: number;
+    error?: string;        // 실패 시 에러 메시지
+  };
+}
+
+/**
+ * Evidence 수집기 인터페이스
+ */
+export interface EvidenceCollector {
+  startSession(scenarioId: string): void;
+  captureStep(stepIndex: number, action: string): Promise<Evidence>;
+  recordSelfHealing(event: SelfHealingEvent): void;
+  finalizeSession(result: QAScenarioResult): Promise<EvidenceReport>;
+}
+
+/**
+ * Evidence Report
+ */
+export interface EvidenceReport {
+  sessionId: string;
+  scenarioId: string;
+  startedAt: string;
+  completedAt: string;
+  status: 'passed' | 'failed';
+  evidence: Evidence[];
+  summary: {
+    totalSteps: number;
+    capturedEvidence: number;
+    selfHealingEvents: number;
+  };
+}
+
+/**
+ * Evidence 검증 결과
+ */
+export interface EvidenceVerification {
+  valid: boolean;
+  missingEvidence: string[];  // 누락된 evidence 경로 목록
+  errors: string[];          // 에러 메시지
+  warnings: string[];        // 경고 메시지
+}
+
+/**
+ * OpenClaw Tester 결과에 Evidence 추가
+ */
+export interface OpenClawTesterResultWithEvidence extends OpenClawTesterResult {
+  evidenceReport?: EvidenceReport;
+  evidenceVerification?: EvidenceVerification;
+}

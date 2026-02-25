@@ -42,7 +42,14 @@
   "dependencies": {
     "playwright": "^1.40.0"
   },
-  "openclaw": {
+  #VW|  "openclaw": {
+    "skills": [
+      "./skills/orchestrator",
+      "./skills/plan-squad",
+      "./skills/execution-squad",
+      "./skills/review-squad",
+      "./skills/openclaw-tester"
+    ],
     "skills": [
       "./skills/orchestrator",
       "./skills/plan-squad",
