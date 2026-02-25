@@ -1,52 +1,144 @@
 # openclaw-dev-team
 
-AI-powered development team for OpenClaw.
+🤖 AI-powered development team for OpenClaw.
+
+## One-Line Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/install.sh | bash
+```
 
 ## Quick Start
 
 ```bash
-# Install
+# One-line install
+curl -fsSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/install.sh | bash
+
+# Or manual install
+git clone https://github.com/vhfmatks/openclaw-dev-team.git
+cd openclaw-dev-team
 npm install
 npm run install:all
 
 # Enable
-openclaw hooks enable dev-team-trigger
-openclaw skills enable dev-team-orchestrator
+openclaw restart
 
 # Use (in Telegram)
 "대시보드 만들어줘"
 ```
 
-## Structure
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     dev-team:orchestrator                        │
+│                       (Main Orchestrator)                        │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        ▼                       ▼                       ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│   Plan Squad  │    │Execution Squad│    │ Review Squad  │
+│   Phase 1     │───▶│   Phase 2     │───▶│   Phase 3     │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                    │                    │
+   ┌────┴────┐          ┌────┴────┐         ┌─────┴─────┐
+   ▼         ▼          ▼         ▼         ▼     ▼     ▼
+Planner   Critic     Coder   Reviewer   Reviewer QA    Final
+                      CodeRev Tester    OpenClaw Tester Approver
+                      DepMgr
+```
+
+## Skills (22)
+
+| Squad | Skills |
+|-------|--------|
+| **Orchestrator** | `dev-team:orchestrator`, `dev-team:start` |
+| **Plan Squad** | `planning-squad`, `planning-planner`, `planning-critic`, `planning-architecture` |
+| **Execution Squad** | `execution-squad`, `execution-coder`, `execution-code-reviewer`, `execution-tester`, `execution-dependency-manager` |
+| **Review Squad** | `review-squad`, `review-reviewer`, `review-qa-tester`, `review-openclaw-tester` ⚡, `review-final-approver` |
+
+## Review Squad Modes
+
+| Mode | Members | Use Case |
+|------|---------|----------|
+| **Basic** | Reviewer only | Simple fixes, 1-2 files |
+| **Full** | Reviewer + QA + OpenClaw + Final | New features, 3+ files |
+
+### OpenClaw Tester (⚡ auto-activated)
+
+- **Self-healing tests**: Accessibility Tree based element identification
+- **NLP → Playwright**: Natural language test scenarios
+- **Parallel execution**: Sub-agents for concurrent testing
+- **Evidence collection**: Screenshots, logs, snapshots (mandatory)
+
+## Project Structure
 
 ```
 ├── skills/
-│   ├── orchestrator/   # Main coordinator
-│   ├── planner/        # Planning agent
-│   ├── executor/       # Code generation
-│   └── validator/      # Browser testing
+│   ├── orchestrator/      # Main coordinator
+│   ├── plan-squad/        # Planning squad leader
+│   ├── execution-squad/   # Execution squad leader
+│   ├── review-squad/      # Review squad leader
+│   ├── openclaw-tester/   # OpenClaw advanced tester
+│   └── types.ts           # Shared TypeScript types
 ├── hooks/
-│   └── dev-team-trigger/  # Telegram trigger
+│   └── dev-team-trigger/  # Telegram/Slack trigger
+├── research/
+│   └── staging-test-with-openclaw.md
 ├── .dev-team/
-│   ├── state/          # Runtime state
-│   ├── plans/          # Generated plans
-│   ├── reports/        # Validation reports
-│   └── screenshots/    # Test screenshots
+│   ├── state/             # Runtime state
+│   ├── plans/             # Generated plans
+│   ├── reports/           # Validation reports
+│   ├── screenshots/       # Test screenshots
+│   └── evidence/          # OpenClaw test evidence
 └── docs/
-    └── research-result/  # Research documents
+    └── research-result/   # Research documents
 ```
 
-## Workflow
+## Pipeline Flow
 
 ```
-Telegram → Hook → Orchestrator → Planner → Executor → Validator → Telegram
+Phase 1          Phase 2           Phase 3           Phase 4
+┌────────┐      ┌────────┐        ┌────────┐        ┌────────┐
+│  Plan  │ ───▶ │Execute │ ─────▶ │ Review │ ─────▶ │Delivery│
+│ Squad  │      │ Squad  │        │ Squad  │        │        │
+└────────┘      └────────┘        └────────┘        └────────┘
+     │               │                  │
+     ▼               ▼                  ▼
+  Rework          Rework            Routing
+  (max 3)         (max 3)       ┌─────┴─────┐
+                               ▼           ▼
+                         → Planner    → Executor
+```
+
+## Commands
+
+```bash
+# Install
+curl -fsSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/install.sh | bash
+
+# Update
+curl -fsSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/install.sh | bash -s -- --update
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/vhfmatks/openclaw-dev-team/main/install.sh | bash -s -- --uninstall
+
+# Check installation
+openclaw skills list | grep dev-team
+openclaw hooks list | grep dev-team
+
+# View logs
+tail -f ~/.openclaw/gateway.log | grep dev-team
+
+# View pipeline log
+cat ~/.openclaw/workspace/dev-team/pipeline-log.jsonl | jq .
 ```
 
 ## Documentation
 
-- [Integration Guide](./INTEGRATION_GUIDE.md)
-- [Implementation Plan](./docs/research-result/08-implementation-plan.md)
-- [Architecture](./docs/research-result/06-self-validation-loop-architecture.md)
+- [INSTALL.md](./INSTALL.md) - Detailed installation guide
+- [research/staging-test-with-openclaw.md](./research/staging-test-with-openclaw.md) - OpenClaw testing research
 
 ## License
 

@@ -39,22 +39,16 @@
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
   },
-  "dependencies": {
+  #MT|  "dependencies": {
     "playwright": "^1.40.0"
   },
-  #VW|  "openclaw": {
+  "openclaw": {
     "skills": [
       "./skills/orchestrator",
       "./skills/plan-squad",
       "./skills/execution-squad",
       "./skills/review-squad",
       "./skills/openclaw-tester"
-    ],
-    "skills": [
-      "./skills/orchestrator",
-      "./skills/plan-squad",
-      "./skills/execution-squad",
-      "./skills/review-squad"
     ],
     "hooks": [
       "./hooks/dev-team-trigger"
