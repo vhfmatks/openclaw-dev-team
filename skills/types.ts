@@ -383,6 +383,34 @@ export const AGENT_MODEL_DEFAULTS: Record<string, ModelTier> = {
 };
 
 // ============================================================================
+// AI Provider Types (Codex CLI Integration)
+// ============================================================================
+
+/**
+ * AI Provider type - determines which AI backend to use
+ */
+export type AIProvider = 'openclaw' | 'codex';
+
+/**
+ * Codex CLI configuration
+ */
+export interface CodexCLIConfig {
+  enabled: boolean;
+  model: string;
+  timeout: number;
+  fallbackToOpenClaw: boolean;
+}
+
+/**
+ * Provider configuration for dev team
+ */
+export interface ProviderConfig {
+  default?: AIProvider;
+  codex?: CodexCLIConfig;
+}
+
+
+// ============================================================================
 // Input/Output Types for Skills
 // ============================================================================
 
@@ -406,6 +434,8 @@ export interface OrchestratorInput {
     from: string;
     channelId: string;
   };
+  provider?: AIProvider;  // NEW: per-request override
+
 }
 
 /**
@@ -606,6 +636,8 @@ export interface ExecutionSquadInput {
     existingFiles: string[];
     techStack: string[];
   };
+  provider?: AIProvider;  // NEW: inherited from orchestrator
+
 }
 
 /**
@@ -825,6 +857,8 @@ export interface DevTeamConfig {
     enableScreenshots?: boolean;
     testTimeout?: number;
   };
+  provider?: ProviderConfig;  // NEW: AI provider configuration
+
 }
 
 
@@ -1199,8 +1233,6 @@ export interface OpenClawTesterResult {
     rate: number;  // percentage
   };
 }
-#MM|  }
-];
 
 // ============================================================================
 // Evidence Types
@@ -1210,6 +1242,7 @@ export interface OpenClawTesterResult {
  * Evidence 유형
  */
 export type EvidenceType = 'screenshot' | 'video' | 'log' | 'snapshot' | 'script';
+
 
 /**
  * 테스트 단계별 Evidence
@@ -1256,7 +1289,6 @@ export interface EvidenceReport {
   };
 }
 
-
 /**
  * OpenClaw Tester를 포함한 Review Squad 출력
  */
@@ -1268,61 +1300,8 @@ export interface ReviewSquadOutputWithOpenClaw extends ReviewSquadOutput {
     testPassRate: number;
     selfHealingRate?: number;
   };
-#ZW|}
-
-/**
- * Evidence 수집 관련 타입
- */
-
-/**
- * Evidence 유형
- */
-export type EvidenceType = 'screenshot' | 'video' | 'log' | 'snapshot' | 'script';
-
-/**
- * 개별 Evidence 항목
- */
-export interface Evidence {
-  id: string;              // evidence-20260225-001-step-03
-  timestamp: string;
-  type: EvidenceType;
-  path: string;
-  metadata: {
-    scenarioId: string;
-    stepIndex: number;
-    action: string;
-    url: string;
-    duration?: number;
-    error?: string;        // 실패 시 에러 메시지
-  };
 }
 
-/**
- * Evidence 수집기 인터페이스
- */
-export interface EvidenceCollector {
-  startSession(scenarioId: string): void;
-  captureStep(stepIndex: number, action: string): Promise<Evidence>;
-  recordSelfHealing(event: SelfHealingEvent): void;
-  finalizeSession(result: QAScenarioResult): Promise<EvidenceReport>;
-}
-
-/**
- * Evidence Report
- */
-export interface EvidenceReport {
-  sessionId: string;
-  scenarioId: string;
-  startedAt: string;
-  completedAt: string;
-  status: 'passed' | 'failed';
-  evidence: Evidence[];
-  summary: {
-    totalSteps: number;
-    capturedEvidence: number;
-    selfHealingEvents: number;
-  };
-}
 
 /**
  * Evidence 검증 결과

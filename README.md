@@ -135,6 +135,50 @@ tail -f ~/.openclaw/gateway.log | grep dev-team
 cat ~/.openclaw/workspace/dev-team/pipeline-log.jsonl | jq .
 ```
 
+## Codex CLI Integration
+
+OpenClaw dev-team supports **Codex CLI** as an alternative AI backend for faster code generation.
+
+### Setup
+
+```bash
+# 1. Install Codex CLI
+npm install -g @openai/codex
+
+# 2. Set API key
+export OPENAI_API_KEY="sk-..."
+
+# 3. Verify
+ codex --version
+```
+
+### Usage
+
+```bash
+# Use Codex via environment variable
+OPENCLAW_PROVIDER=codex openclaw invoke dev-team:orchestrator \
+  --input '{"taskId":"test","request":"Add hello function","source":{"from":"cli","channelId":"test"}}'
+
+# Or per-request
+openclaw invoke dev-team:orchestrator \
+  --input '{..."provider":"codex"}'
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `OPENCLAW_PROVIDER` | AI backend (`openclaw` or `codex`) | `openclaw` |
+| `OPENCLAW_CODEX_MODEL` | Codex model | `gpt-5` |
+| `OPENCLAW_CODEX_TIMEOUT` | Timeout in ms | `300000` |
+| `OPENCLAW_CODEX_FALLBACK` | Fallback to OpenClaw | `true` |
+
+### Fallback Behavior
+
+If Codex CLI is unavailable or fails, the system automatically falls back to OpenClaw.
+
+For detailed setup, see [docs/codex-integration.md](./docs/codex-integration.md).
+
 ## Documentation
 
 - [INSTALL.md](./INSTALL.md) - Detailed installation guide

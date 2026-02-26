@@ -233,6 +233,125 @@ docker exec openclaw-dev-team-gateway node dist/index.js skills | grep dev-team
 
 ---
 
+## Codex CLI 통합
+
+OpenClaw dev-team은 **Codex CLI**를 대체 AI 백엔드로 지원합니다.
+
+### 설치
+
+```bash
+# Codex CLI 설치
+npm install -g @openai/codex
+
+# 설치 확인
+codex --version
+```
+
+### API 키 설정
+
+```bash
+# OpenAI API 키 설정 (필수)
+export OPENAI_API_KEY="sk-..."
+
+# ~/.bashrc 또는 ~/.zshrc에 추가
+ echo 'export OPENAI_API_KEY="sk-..."' >> ~/.bashrc
+```
+
+### 사용 방법
+
+#### 방법 1: 환경 변수
+
+```bash
+# 기본 provider를 Codex로 설정
+export OPENCLAW_PROVIDER=codex
+
+# 선택 사항: 모델 및 타임아웃 설정
+export OPENCLAW_CODEX_MODEL=gpt-5
+export OPENCLAW_CODEX_TIMEOUT=300000  # 5분
+```
+
+#### 방법 2: 요청별 설정
+
+```json
+{
+  "taskId": "task-001",
+  "request": "Create a Button component",
+  "source": { "from": "cli", "channelId": "test" },
+  "provider": "codex"
+}
+```
+
+### 환경 변수
+
+| 변수 | 설명 | 기본값 |
+|------|------|--------|
+| `OPENCLAW_PROVIDER` | AI 백엔드 (`openclaw` \| `codex`) | `openclaw` |
+| `OPENCLAW_CODEX_MODEL` | Codex 모델 | `gpt-5` |
+| `OPENCLAW_CODEX_TIMEOUT` | 타임아웃 (ms) | `300000` |
+| `OPENCLAW_CODEX_FALLBACK` | OpenClaw로 폴백 | `true` |
+
+### Fallback 동작
+
+Codex CLI를 사용할 수 없거나 실패하면 자동으로 OpenClaw로 전환됩니다:
+
+1. **CLI 미설치**: 즉시 폴백
+2. **타임아웃**: 타임아웃 후 폴백
+3. **오류**: 모든 오류 시 폴백
+
+Fallback을 비활성화하려면:
+
+```bash
+export OPENCLAW_CODEX_FALLBACK=false
+```
+
+### 문제 해결
+
+#### Codex CLI가 설치되지 않음
+
+```
+========================================
+[Codex] CLI not available
+========================================
+Codex CLI is not installed
+Install Codex CLI:
+  npm install -g @openai/codex
+
+Then set your API key:
+  export OPENAI_API_KEY="sk-..."
+
+Falling back to OpenClaw...
+```
+
+#### 인증 실패 (API 키 미설정)
+
+```
+========================================
+[Codex] Execution failed
+========================================
+Authentication failed: OPENAI_API_KEY not set or invalid.
+
+To fix: Set your OpenAI API key
+  export OPENAI_API_KEY="sk-..."
+
+Falling back to OpenClaw...
+```
+
+#### 수동 확인
+
+```bash
+# CLI 설치 확인
+which codex
+codex --version
+
+# API 키 확인
+echo $OPENAI_API_KEY
+
+# 로그에서 provider 확인
+grep "provider=codex" ~/.openclaw/workspace/dev-team/pipeline-log.jsonl
+```
+
+---
+
 ## 문제 해결
 
 ### Skills가 보이지 않음
