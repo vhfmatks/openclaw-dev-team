@@ -11,15 +11,26 @@ OpenClaw dev-team supports using OpenAI Codex CLI as an alternative AI backend f
    npm install -g @openai/codex
    ```
 
-2. **Set API Key**:
+2. **Authentication** (OAuth **or** API Key - 둘 중 하나만 설정):
+   
+   **Option A: OAuth** (권장)
+   ```bash
+   codex auth login
+   # 브라우저에서 OpenAI 계정으로 로그인
+   ```
+   
+   **Option B: API Key**
    ```bash
    export OPENAI_API_KEY="sk-..."
    ```
 
-3. **Verify Installation**:
+3. **Verify Installation & Auth**:
    ```bash
    codex --version
+   codex auth status  # 인증 상태 확인
    ```
+
+> ⚠️ **중요**: OAuth 또는 API Key 둘 중 하나라도 설정되어 있지 않으면 Codex CLI를 사용할 수 없습니다. 인증 실패 시 자동으로 OpenClaw로 폴백됩니다.
 
 ## Configuration
 
@@ -106,14 +117,20 @@ codex --version
 npm install -g @openai/codex
 ```
 
-### API Key Issues
+### Authentication Issues
 
 ```bash
-# Verify API key is set
-echo $OPENAI_API_KEY
+# 인증 상태 확인 (OAuth 또는 API Key)
+codex auth status
 
-# Set if missing
+# OAuth로 재인증
+codex auth login
+
+# 또는 API Key 설정
 export OPENAI_API_KEY="sk-..."
+
+# API Key 확인
+echo $OPENAI_API_KEY
 ```
 
 ### Timeout Issues

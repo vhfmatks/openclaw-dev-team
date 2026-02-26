@@ -145,12 +145,19 @@ OpenClaw dev-team supports **Codex CLI** as an alternative AI backend for faster
 # 1. Install Codex CLI
 npm install -g @openai/codex
 
-# 2. Set API key
+# 2. Authentication (OAuth OR API Key - 둘 중 하나만)
+# Option A: OAuth (권장)
+codex auth login
+
+# Option B: API Key
 export OPENAI_API_KEY="sk-..."
 
 # 3. Verify
- codex --version
+codex --version
+codex auth status
 ```
+
+> ⚠️ OAuth 또는 API Key 둘 중 하나라도 설정되어 있지 않으면 Codex CLI를 사용할 수 없습니다.
 
 ### Usage
 
